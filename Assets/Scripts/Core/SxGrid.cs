@@ -39,5 +39,26 @@ namespace Slash.Core
         {
             return token != null;
 		}
+
+        public void SetToken(SxToken newToken)
+        {
+            if (token != null)
+            {
+                SxLog.Warning("Token already on board, disposing the old token.");
+                token.Dispose();
+			}
+			if (newToken == null)
+                return;
+
+            token = newToken;
+            if (token == null)
+                throw new System.ArgumentNullException(nameof(newToken), "Token cannot be null.");
+			token.LinkGrid(this);
+		}
+
+        public void ClearToken()
+        {
+            token = null;
+		}
 	}
 }

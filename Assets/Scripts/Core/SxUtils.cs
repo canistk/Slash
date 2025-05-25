@@ -2,7 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 namespace Slash.Core
 {
-    public static class SxUtils
+	/// <summary>
+	/// GDD for Slash
+	///  <see cref="https://docs.google.com/presentation/d/1gtWlXeyuOhin_iXzKzpWtwurvbSqCe486Cq9LbfW67M/edit?slide=id.g35b01949cc8_0_63#slide=id.g35b01949cc8_0_63"/>
+	/// </summary>
+	public static class SxUtils
     {
     }
 
@@ -32,6 +36,8 @@ namespace Slash.Core
 
 	public enum eGameRule
 	{
+		None = 0,
+
 		/// <see cref="https://en.wikipedia.org/wiki/Reversi"/>
 		/// (also known as Othello) is a pretty simple game.
 		/// It consists of a 8x8 square board, and pieces with one black and one white side.

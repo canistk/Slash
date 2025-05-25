@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 namespace Slash.Core
 {
-    public class SxGrids
+    public class SxBoard
     {
         private SxGrid[,] m_Grids = null;
 
-        public SxGrids(int width, int height)
+		public delegate void GridCreated(int x, int y, SxGrid grid);
+		public SxBoard(int width, int height,
+			GridCreated onCreated)
         {
             if (width <= 0 || height <= 0)
             {
@@ -22,7 +24,7 @@ namespace Slash.Core
                 for (int y = 0; y < height; y++)
                 {
                     m_Grids[x, y] = new SxGrid();
-                }
+				}
             }
 
             // set neighbors
@@ -35,6 +37,7 @@ namespace Slash.Core
                     if (y > 0)          grid.SetGrid(eDirection.Up,     m_Grids[x, y - 1]);
                     if (x < width - 1)  grid.SetGrid(eDirection.Right,  m_Grids[x + 1, y]);
                     if (y < height - 1) grid.SetGrid(eDirection.Down,   m_Grids[x, y + 1]);
+					onCreated?.Invoke(x, y, grid);
                 }
             }
         }
@@ -49,6 +52,7 @@ namespace Slash.Core
             }
             return m_Grids[x, y];
         }
+
         public bool HasToken(int x, int y)
         {
             var grid = TryGetGrid(x, y);
