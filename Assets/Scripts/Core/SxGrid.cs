@@ -3,16 +3,8 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-namespace Slash
+namespace Slash.Core
 {
-    public enum eDirection
-    {
-        Left = 0,
-        Up = 1,
-        Right = 2,
-        Down = 3
-	}
-
 	public class SxGrid
     {
 		public SxToken token;
