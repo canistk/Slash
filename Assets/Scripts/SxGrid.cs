@@ -1,0 +1,53 @@
+using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine;
+
+namespace Slash
+{
+    public enum eDirection
+    {
+        Left = 0,
+        Up = 1,
+        Right = 2,
+        Down = 3
+	}
+
+	public class SxGrid
+    {
+		public SxToken token;
+        private SxGrid[] m_Arr; // 0 = left, 1 = up, 2 = right, 3 = down
+
+        public SxGrid()
+        {
+            m_Arr = new SxGrid[4];
+		}
+
+        public void SetGrid(eDirection direction, SxGrid grid)
+        {
+            if (direction < eDirection.Left || direction > eDirection.Down)
+            {
+                Debug.LogError("Invalid direction specified.");
+                return;
+            }
+            m_Arr[(int)direction] = grid;
+        }
+
+        public bool TryGetGrid(eDirection direction, out SxGrid grid)
+        {
+            if (direction < eDirection.Left || direction > eDirection.Down)
+            {
+                Debug.LogError("Invalid direction specified.");
+                grid = null;
+                return false;
+            }
+            grid = m_Arr[(int)direction];
+            return grid != null;
+		}
+
+		public bool HasToken()
+        {
+            return token != null;
+		}
+	}
+}
