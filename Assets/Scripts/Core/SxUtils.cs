@@ -1,11 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 namespace Slash.Core
 {
     public static class SxUtils
     {
     }
+
+	public static class SxLog
+	{
+		public static void Error(string message)
+		{
+			UnityEngine.Debug.LogError(message);
+		}
+		public static void Warning(string message)
+		{
+			UnityEngine.Debug.LogWarning(message);
+		}
+		public static void Info(string message)
+		{
+			UnityEngine.Debug.Log(message);
+		}
+	}
 
 	public enum eDirection
 	{

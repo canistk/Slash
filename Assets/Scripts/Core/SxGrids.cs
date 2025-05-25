@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 namespace Slash.Core
 {
     public class SxGrids
@@ -11,7 +10,7 @@ namespace Slash.Core
         {
             if (width <= 0 || height <= 0)
             {
-                Debug.LogError($"Invalid grid dimensions: {width}x{height}. Both dimensions must be greater than zero.");
+                SxLog.Error($"Invalid grid dimensions: {width}x{height}. Both dimensions must be greater than zero.");
                 return;
 			}
 
@@ -45,7 +44,7 @@ namespace Slash.Core
                 x < 0 || x >= m_Grids.GetLength(0) ||
                 y < 0 || y >= m_Grids.GetLength(1))
             {
-                Debug.LogError($"Invalid grid coordinates: ({x}, {y}) out of ({m_Grids.GetLength(0)}, {m_Grids.GetLength(1)})");
+                SxLog.Error($"Invalid grid coordinates: ({x}, {y}) out of ({m_Grids.GetLength(0)}, {m_Grids.GetLength(1)})");
                 return null;
             }
             return m_Grids[x, y];
@@ -55,7 +54,7 @@ namespace Slash.Core
             var grid = TryGetGrid(x, y);
             if (grid == null)
             {
-                Debug.LogError($"No grid found at ({x}, {y})");
+				SxLog.Error($"No grid found at ({x}, {y})");
                 return false;
             }
             return grid.HasToken();

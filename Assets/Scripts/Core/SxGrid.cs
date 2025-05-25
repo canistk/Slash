@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine;
 
 namespace Slash.Core
 {
@@ -19,7 +17,7 @@ namespace Slash.Core
         {
             if (direction < eDirection.Left || direction > eDirection.Down)
             {
-                Debug.LogError("Invalid direction specified.");
+                SxLog.Error("Invalid direction specified.");
                 return;
             }
             m_Arr[(int)direction] = grid;
@@ -29,7 +27,7 @@ namespace Slash.Core
         {
             if (direction < eDirection.Left || direction > eDirection.Down)
             {
-                Debug.LogError("Invalid direction specified.");
+				SxLog.Error("Invalid direction specified.");
                 grid = null;
                 return false;
             }
