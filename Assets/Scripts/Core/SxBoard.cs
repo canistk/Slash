@@ -63,5 +63,22 @@ namespace Slash.Core
             }
             return grid.HasToken();
         }
-    }
+
+        public bool TrySetToken(int x, int y, SxToken token)
+		{
+			var grid = TryGetGrid(x, y);
+			if (grid == null)
+			{
+				SxLog.Error($"No grid found at ({x}, {y})");
+				return false;
+			}
+			if (token == null)
+			{
+				SxLog.Error("Token cannot be null.");
+				return false;
+			}
+			grid.SetToken(token);
+			return true;
+		}
+	}
 }

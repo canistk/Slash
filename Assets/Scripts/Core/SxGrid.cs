@@ -40,7 +40,8 @@ namespace Slash.Core
             return token != null;
 		}
 
-        public void SetToken(SxToken newToken)
+        public static event System.Action<SxGrid> EVENT_TokenChanged;
+		public void SetToken(SxToken newToken)
         {
             if (token != null)
             {
@@ -54,11 +55,13 @@ namespace Slash.Core
             if (token == null)
                 throw new System.ArgumentNullException(nameof(newToken), "Token cannot be null.");
 			token.LinkGrid(this);
+            EVENT_TokenChanged?.Invoke(this);
 		}
 
         public void ClearToken()
         {
             token = null;
+			EVENT_TokenChanged?.Invoke(this);
 		}
 	}
 }
