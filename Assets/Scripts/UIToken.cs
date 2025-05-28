@@ -11,6 +11,7 @@ namespace Slash
 		public void Init(SxToken token)
 		{
 			this.data = token;
+			this.data.UI = this;
 		}
 
 		public void SetColor(Color color)

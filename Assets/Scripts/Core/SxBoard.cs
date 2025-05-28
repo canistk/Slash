@@ -23,7 +23,7 @@ namespace Slash.Core
             {
                 for (int y = 0; y < height; y++)
                 {
-                    m_Grids[x, y] = new SxGrid();
+                    m_Grids[x, y] = new SxGrid(this);
 				}
             }
 
@@ -80,5 +80,66 @@ namespace Slash.Core
 			grid.SetToken(token);
 			return true;
 		}
-	}
+
+
+		#region Rule
+		eGameRule m_Rule = eGameRule.None;
+		public eGameRule Rule
+		{
+			get { return m_Rule; }
+			private set
+			{
+				if (m_Rule == value)
+					return;
+				m_Rule = value;
+				SxLog.Info($"Game rule changed to: {m_Rule}");
+				EVENT_GameRuleChanged?.Invoke(m_Rule);
+			}
+		}
+		public void SetRule(eGameRule rule) => Rule = rule;
+		#endregion Rule
+
+		#region Events
+		public event System.Action<eGameRule> EVENT_GameRuleChanged;
+		public delegate void BoardCreated(SxBoard board);
+		#endregion Events
+
+		/// <summary>
+		/// Tries to apply the player's selection on the grid.
+		/// </summary>
+		/// <param name="grid"></param>
+		/// <returns>
+		/// true = accept player selection, place or flip token.
+		/// false = reject player selection, do not execute require.
+		/// </returns>
+		internal bool TryApplyPlayerSelection(SxGrid grid)
+        {
+            // Handle the click event on the grid,
+            // based on current game logic.
+
+
+            // grid.HasToken();
+
+            switch (Rule)
+            {
+                default:
+                case eGameRule.None:
+				SxLog.Error("No game rule set. Cannot handle click on grid.");
+                return false;
+
+                case eGameRule.Reversi:
+                // TODO: SxUtil.Reversi Rule
+                break;
+
+                case eGameRule.Gobang:
+                break;
+
+                case eGameRule.Checkers:
+                break;
+            }
+
+            SxLog.Error("Unhandled game rule: " + Rule);
+			return false;
+        }
+    }
 }

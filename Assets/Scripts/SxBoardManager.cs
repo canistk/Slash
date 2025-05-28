@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Slash.Core;
 using UnityEngine;
 namespace Slash
@@ -29,29 +30,8 @@ namespace Slash
             }
 		}
 
-		#region Rule
-		eGameRule m_Rule = eGameRule.None;
-		public eGameRule Rule
-        {
-            get { return m_Rule; }
-            private set
-            {
-                if (m_Rule == value)
-                    return;
-                m_Rule = value;
-                SxLog.Info($"Game rule changed to: {m_Rule}");
-				EVENT_GameRuleChanged?.Invoke(m_Rule);
-            }
-		}
-		public void SetRule(eGameRule rule) => Rule = rule;
-		#endregion Rule
-
-		#region Events
 		public event System.Action EVENT_BoardReset;
 		public event System.Action EVENT_BoardCreated;
-        public event System.Action<eGameRule> EVENT_GameRuleChanged;
-		public delegate void BoardCreated(SxBoard board);
-		#endregion Events
 
 		[SerializeField] int m_Width = 8;
 		[SerializeField] int m_Height = 8;
@@ -103,7 +83,7 @@ namespace Slash
 			}
 			m_GridMap = new Dictionary<SxGrid, UIGrid>();
 			m_Board = new SxBoard(width, height, OnGridCreated);
-            SetRule(rule);
+            m_Board.SetRule(rule);
 			EVENT_BoardCreated?.Invoke();
 		}
 
@@ -113,6 +93,8 @@ namespace Slash
             SxLog.Info("Board has been reset.");
 		}
 
+
+		private int m_ChessLayer = -1;
 		Dictionary<SxGrid, UIGrid> m_GridMap = null;
 		private void OnGridCreated(int x, int y, SxGrid grid)
 		{
@@ -129,7 +111,20 @@ namespace Slash
 			var go		= Instantiate(prefab, pos, Quaternion.identity);
 			var comp	= go.GetComponent<UIGrid>();
 
+			if (comp == null)
+				throw new System.NullReferenceException();
+
 			go.name		= $"Grid {x},{y} / white={isWhite}";
+
+			var colliders = go.GetComponentsInChildren<Collider>();
+			if (m_ChessLayer == -1)
+			{
+				m_ChessLayer = LayerMask.NameToLayer("chess");
+			}
+			foreach (var c in colliders)
+			{
+				c.gameObject.layer = m_ChessLayer;
+			}
 			comp.Init(grid);
 		}
 
@@ -152,10 +147,35 @@ namespace Slash
 				m_Hits = new RaycastHit[m_HitBuffer];
 			}
 			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+			Debug.DrawLine(ray.origin, ray.origin + ray.direction * m_Distance, Color.red, 5f);
 			var hitCnt = Physics.RaycastNonAlloc(ray, m_Hits, m_Distance, m_LayerMask, m_Qti);
 			if (hitCnt == 0)
 				return; // hit nothing
+			var iter = m_Hits
+				.Take(hitCnt)
+				.Where(o => o.collider != null)
+				.OrderBy(o => o.distance);
+			foreach (var obj in iter)
+			{
+				var grid = obj.collider.gameObject.GetComponent<UIGrid>();
+				if (grid == null)
+				{
+					SxLog.Warning("Raycast hit a collider without UIGrid component.");
+					continue;
+				}
 
+				try
+				{
+					grid.HandleClick();
+					SxLog.Info($"Clicked on grid at position {grid.transform.position}", grid);
+					return; // only handle the first hit
+				}
+				catch (System.Exception ex)
+				{
+					SxLog.Error($"Error handling click on grid: {ex.Message}");
+					continue;
+				}
+			}
 		}
 		#endregion Handle Click
 	}

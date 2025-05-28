@@ -9,20 +9,34 @@ namespace Slash.Core
 	public static class SxUtils
     {
     }
+	public class SetupException : System.Exception
+	{
+		public SetupException(string msg, System.Exception innerException) : base(msg, innerException) { }
+		public SetupException(string msg) : base(msg) { }
+
+		public SetupException() : base() { }
+	}
+	public class SxException : System.Exception
+	{
+		public SxException(string msg, System.Exception innerException) : base(msg, innerException) { }
+		public SxException(string msg) : base(msg) { }
+
+		public SxException() : base() { }
+	}
 
 	public static class SxLog
 	{
-		public static void Error(string message)
+		public static void Error(string message, UnityEngine.Object obj = null)
 		{
-			UnityEngine.Debug.LogError(message);
+			UnityEngine.Debug.LogError(message, obj);
 		}
-		public static void Warning(string message)
+		public static void Warning(string message, UnityEngine.Object obj = null)
 		{
-			UnityEngine.Debug.LogWarning(message);
+			UnityEngine.Debug.LogWarning(message, obj);
 		}
-		public static void Info(string message)
+		public static void Info(string message, UnityEngine.Object obj = null)
 		{
-			UnityEngine.Debug.Log(message);
+			UnityEngine.Debug.Log(message, obj);
 		}
 	}
 
@@ -52,7 +66,7 @@ namespace Slash.Core
 		/// <see cref="https://en.wikipedia.org/wiki/Checkers"/>
 		/// (also known as Draughts) is a game played on a square board, where players take turns moving their pieces diagonally.
 		/// The goal is to capture all of the opponent's pieces.
-		checkers,   
+		Checkers,   
 	}
 
 }

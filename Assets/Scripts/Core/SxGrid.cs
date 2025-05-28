@@ -7,10 +7,14 @@ namespace Slash.Core
     {
 		public SxToken token;
         private SxGrid[] m_Arr; // 0 = left, 1 = up, 2 = right, 3 = down
+        private SxBoard m_Board;
+        public SxBoard board => m_Board;
+        public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
 
-        public SxGrid()
+		public SxGrid(SxBoard board)
         {
-            m_Arr = new SxGrid[4];
+            this.m_Board = board;
+			this.m_Arr = new SxGrid[4];
 		}
 
         public void SetGrid(eDirection direction, SxGrid grid)
@@ -62,6 +66,13 @@ namespace Slash.Core
         {
             token = null;
 			EVENT_TokenChanged?.Invoke(this);
+		}
+
+        public void HandleUIClick(object caller)
+        {
+            if (caller != UI)
+                throw new SxException("Caller does not match the UI instance of this grid.");
+            board.TryApplyPlayerSelection(this);
 		}
 	}
 }

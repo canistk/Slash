@@ -6,7 +6,7 @@ namespace Slash.Core
 	{
         public bool isWhite = false; // true for white, false for black
 		private bool isDisposed;
-
+		public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
 		public bool isBlack => !isWhite;
 
         public static SxToken CreateWhite()
