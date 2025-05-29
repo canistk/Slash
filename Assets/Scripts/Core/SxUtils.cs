@@ -69,4 +69,10 @@ namespace Slash.Core
 		Checkers,   
 	}
 
+	public enum eTurn
+	{
+		None = 2,	// No player's turn (e.g., game over or not started)
+		White = 1,	// White player's turn
+		Black = 2,	// Black player's turn
+	}
 }

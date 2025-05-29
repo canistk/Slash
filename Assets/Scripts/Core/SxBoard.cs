@@ -5,6 +5,7 @@ namespace Slash.Core
     public class SxBoard
     {
         private SxGrid[,] m_Grids = null;
+        private Dictionary<string, SxGrid> m_GridLookup = new Dictionary<string, SxGrid>();
 
 		public delegate void GridCreated(int x, int y, SxGrid grid);
 		public SxBoard(int width, int height,
@@ -17,13 +18,17 @@ namespace Slash.Core
 			}
 
 			m_Grids = new SxGrid[width, height];
-            
-            // allocate grids
-            for (int x = 0; x < width; x++)
+			m_GridLookup = new Dictionary<string, SxGrid>(width * height);
+
+			// allocate grids
+			for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    m_Grids[x, y] = new SxGrid(this);
+                    var ch = (char)('A' + x);
+                    var id = $"{ch}{y + 1}"; // e.g., A1, B2, etc.
+					m_Grids[x, y] = new SxGrid(id, this);
+					m_GridLookup.Add(id, m_Grids[x, y]);
 				}
             }
 
@@ -41,21 +46,55 @@ namespace Slash.Core
                 }
             }
         }
-        public SxGrid TryGetGrid(int x, int y)
+        public bool TryGetGrid(int x, int y, out SxGrid grid)
         {
             if (m_Grids == null ||
                 x < 0 || x >= m_Grids.GetLength(0) ||
                 y < 0 || y >= m_Grids.GetLength(1))
             {
                 SxLog.Error($"Invalid grid coordinates: ({x}, {y}) out of ({m_Grids.GetLength(0)}, {m_Grids.GetLength(1)})");
-                return null;
+                grid = default;
+				return false;
             }
-            return m_Grids[x, y];
+            grid = m_Grids[x, y];
+            return grid != null;
         }
 
-        public bool HasToken(int x, int y)
+        public bool TryGetGrid(string id, out SxGrid grid)
         {
-            var grid = TryGetGrid(x, y);
+            return m_GridLookup.TryGetValue(id, out grid);
+		}
+
+        public SxGrid GetGrid(int x, int y)
+        {
+            if (TryGetGrid(x, y, out var grid))
+            {
+                return grid;
+            }
+            SxLog.Error($"No grid found at ({x}, {y})");
+            return null;
+		}
+
+        public SxGrid GetGrid(string id)
+        {
+            if (TryGetGrid(id, out var grid))
+            {
+                return grid;
+            }
+            SxLog.Error($"No grid found with ID: {id}");
+            return null;
+        }
+
+        public bool HasGrid(int x, int y)
+        {
+            return TryGetGrid(x, y, out _);
+		}
+
+		public bool HasToken(int x, int y)
+        {
+            if (!TryGetGrid(x, y, out var grid))
+                return false;
+
             if (grid == null)
             {
 				SxLog.Error($"No grid found at ({x}, {y})");
@@ -66,21 +105,26 @@ namespace Slash.Core
 
         public bool TrySetToken(int x, int y, SxToken token)
 		{
-			var grid = TryGetGrid(x, y);
-			if (grid == null)
-			{
-				SxLog.Error($"No grid found at ({x}, {y})");
-				return false;
-			}
 			if (token == null)
 			{
 				SxLog.Error("Token cannot be null.");
 				return false;
 			}
+
+            if (!TryGetGrid(x, y, out var grid))
+            {
+                return false;
+            }
+
+			if (grid == null)
+			{
+				SxLog.Error($"No grid found at ({x}, {y})");
+				return false;
+			}
+
 			grid.SetToken(token);
 			return true;
 		}
-
 
 		#region Rule
 		eGameRule m_Rule = eGameRule.None;

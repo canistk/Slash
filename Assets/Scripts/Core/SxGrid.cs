@@ -11,10 +11,13 @@ namespace Slash.Core
         public SxBoard board => m_Board;
         public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
 
-		public SxGrid(SxBoard board)
+
+        public string Id { get; private set; } // Unique identifier for the grid, can be used for debugging or UI purposes
+		public SxGrid(string id, SxBoard board)
         {
-            this.m_Board = board;
-			this.m_Arr = new SxGrid[4];
+            this.Id         = id;
+			this.m_Board    = board;
+			this.m_Arr      = new SxGrid[4];
 		}
 
         public void SetGrid(eDirection direction, SxGrid grid)
@@ -27,7 +30,17 @@ namespace Slash.Core
             m_Arr[(int)direction] = grid;
         }
 
-        public bool TryGetGrid(eDirection direction, out SxGrid grid)
+        public SxGrid GetGrid(eDirection direction)
+        {
+            if (direction < eDirection.Left || direction > eDirection.Down)
+            {
+                SxLog.Error("Invalid direction specified.");
+                return null;
+            }
+            return m_Arr[(int)direction];
+		}
+
+		public bool TryGetGrid(eDirection direction, out SxGrid grid)
         {
             if (direction < eDirection.Left || direction > eDirection.Down)
             {

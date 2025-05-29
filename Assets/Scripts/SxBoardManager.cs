@@ -81,7 +81,6 @@ namespace Slash
                 SxLog.Warning("Board already initialized. Reinitializing will reset the board.");
                 ResetBoard();
 			}
-			m_GridMap = new Dictionary<SxGrid, UIGrid>();
 			m_Board = new SxBoard(width, height, OnGridCreated);
             m_Board.SetRule(rule);
 			EVENT_BoardCreated?.Invoke();
@@ -95,7 +94,6 @@ namespace Slash
 
 
 		private int m_ChessLayer = -1;
-		Dictionary<SxGrid, UIGrid> m_GridMap = null;
 		private void OnGridCreated(int x, int y, SxGrid grid)
 		{
 			// Handle grid creation logic here if needed
@@ -114,7 +112,11 @@ namespace Slash
 			if (comp == null)
 				throw new System.NullReferenceException();
 
-			go.name		= $"Grid {x},{y} / white={isWhite}";
+			// map 1 ~ 26 to a~z
+			// as 'a' = 97, 'A' = 65
+			var ch = (char)('A' + x);
+
+			go.name		= $"Grid [{ch}{y}] - {(isWhite?'W':'B')}";
 
 			var colliders = go.GetComponentsInChildren<Collider>();
 			if (m_ChessLayer == -1)
