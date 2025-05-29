@@ -45,10 +45,10 @@ namespace Slash.Core
                 return;
             }
             // Initialize the board with the starting positions for Reversi
-			board.GetGrid("d4").SetToken(SxToken.CreateWhite());
-			board.GetGrid("d5").SetToken(SxToken.CreateBlack());
-			board.GetGrid("e4").SetToken(SxToken.CreateWhite());
-			board.GetGrid("e5").SetToken(SxToken.CreateBlack());
+			board.GetGrid("D4").SetToken(SxToken.CreateWhite());
+			board.GetGrid("D5").SetToken(SxToken.CreateBlack());
+			board.GetGrid("E4").SetToken(SxToken.CreateWhite());
+			board.GetGrid("E5").SetToken(SxToken.CreateBlack());
 		}
 
         public bool TryPlaceToken(string id, eTurn turn)
@@ -71,7 +71,7 @@ namespace Slash.Core
             }
             if (grid.HasToken())
             {
-                SxLog.Warning($"Grid {grid.Id} already has a token. Cannot place a new token here.");
+                SxLog.Warning($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
                 return false;
             }
             grid.SetToken(token);

@@ -25,10 +25,9 @@ namespace Slash.Core
             {
                 for (int y = 0; y < height; y++)
                 {
-                    var ch = (char)('A' + x);
-                    var id = $"{ch}{y + 1}"; // e.g., A1, B2, etc.
-					m_Grids[x, y] = new SxGrid(id, this);
-					m_GridLookup.Add(id, m_Grids[x, y]);
+                    var grid = new SxGrid(x, y, this);
+					m_Grids[x, y] = grid;
+					m_GridLookup.Add(grid.ReadableId, m_Grids[x, y]);
 				}
             }
 

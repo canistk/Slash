@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Slash.Core
 {
@@ -11,11 +12,18 @@ namespace Slash.Core
         public SxBoard board => m_Board;
         public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
 
-
-        public string Id { get; private set; } // Unique identifier for the grid, can be used for debugging or UI purposes
-		public SxGrid(string id, SxBoard board)
+        public Vector2Int coord; // Unique identifier for the grid, can be used for debugging or UI purposes
+		public string ReadableId
         {
-            this.Id         = id;
+            get
+            {
+                var ch = (char)('A' + coord.x);
+                return $"{ch}{coord.y + 1}"; // e.g., A1, B2, etc.
+			}
+        }
+		public SxGrid(int x, int y, SxBoard board)
+        {
+            this.coord = new Vector2Int(x, y);
 			this.m_Board    = board;
 			this.m_Arr      = new SxGrid[4];
 		}

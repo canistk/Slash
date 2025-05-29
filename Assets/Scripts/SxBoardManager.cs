@@ -112,11 +112,7 @@ namespace Slash
 			if (comp == null)
 				throw new System.NullReferenceException();
 
-			// map 1 ~ 26 to a~z
-			// as 'a' = 97, 'A' = 65
-			var ch = (char)('A' + x);
-
-			go.name		= $"Grid [{ch}{y}] - {(isWhite?'W':'B')}";
+			go.name		= $"Grid [{grid.ReadableId}] - {(isWhite?'W':'B')}";
 
 			var colliders = go.GetComponentsInChildren<Collider>();
 			if (m_ChessLayer == -1)
