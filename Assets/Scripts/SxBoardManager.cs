@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Slash.Core;
 using UnityEngine;
+using UnityEngine.Pool;
 namespace Slash
 {
     public class SxBoardManager : MonoBehaviour
@@ -21,10 +22,10 @@ namespace Slash
                 if (m_Instance == null)
                 {
 					// m_Instance = new SxBoardManager();
-					var prefab = Resources.Load("BoardManager");
-					GameObject.Instantiate(prefab);
-					// let awake handle the instance creation
-					// m_Instance = FindObjectOfType<SxBoardManager>();
+					//var prefab = Resources.Load("BoardManager");
+					//GameObject.Instantiate(prefab);
+
+					m_Instance = FindObjectOfType<SxBoardManager>();
 				}
 				return m_Instance;
             }
@@ -37,8 +38,10 @@ namespace Slash
 		[SerializeField] int m_Height = 8;
 		[SerializeField] GameObject m_GridWPrefab = null;
 		[SerializeField] GameObject m_GridBPrefab = null;
+		[SerializeField] Vector3 m_GridOffset = new Vector3(0f, -0.5f, 0f);
 		[SerializeField] GameObject m_TokenPrefab = null;
-
+		[SerializeField] Vector3 m_TokenOffset = new Vector3(0f, 0.5f, 0f);
+		ObjectPool<UIToken> m_TokenPool;
 		private void Awake()
 		{
 			if (m_Instance != null)
@@ -58,6 +61,19 @@ namespace Slash
 
 			m_Instance = this;
 			DontDestroyOnLoad(gameObject);
+
+			var capacity = m_Width * m_Height;
+			
+			m_TokenPool = new ObjectPool<UIToken>(
+				() => Instantiate(m_TokenPrefab).GetComponent<UIToken>(),
+				token => token.gameObject.SetActive(true),
+				token => token.gameObject.SetActive(false),
+				token => Destroy(token.gameObject),
+				false, capacity, capacity);
+		}
+
+		private void OnEnable()
+		{
 			InitBySetting();
 		}
 
@@ -82,14 +98,18 @@ namespace Slash
                 ResetBoard();
 			}
 			m_Board = new SxBoard(width, height, OnGridCreated);
-            m_Board.SetRule(rule);
+			SxGrid.EVENT_TokenChanged -= OnTokenChanged;
+			SxGrid.EVENT_TokenChanged += OnTokenChanged;
+            m_Board.Init(rule, eTurn.White);
 			EVENT_BoardCreated?.Invoke();
 		}
 
 		public void ResetBoard()
         {
             m_Board = null;
-            SxLog.Info("Board has been reset.");
+			SxGrid.EVENT_TokenChanged -= OnTokenChanged;
+			EVENT_BoardReset?.Invoke();
+			SxLog.Info("Board has been reset.");
 		}
 
 
@@ -103,15 +123,15 @@ namespace Slash
 				return;
 			}
 
-			var pos		= new Vector3(x, 0, y);
+			var pos		= new Vector3(x, 0, y) + m_GridOffset;
 			var isWhite = (x + y) % 2 == 0;
 			var prefab  = isWhite ? m_GridWPrefab : m_GridBPrefab;
-			var go		= Instantiate(prefab, pos, Quaternion.identity);
-			var comp	= go.GetComponent<UIGrid>();
-
-			if (comp == null)
+			var go		= Instantiate(prefab, transform);
+			var uiGrid = go.GetComponent<UIGrid>();
+			if (uiGrid == null)
 				throw new System.NullReferenceException();
-
+			
+			go.transform.SetLocalPositionAndRotation(pos, Quaternion.identity);
 			go.name		= $"Grid [{grid.ReadableId}] - {(isWhite?'W':'B')}";
 
 			var colliders = go.GetComponentsInChildren<Collider>();
@@ -123,7 +143,36 @@ namespace Slash
 			{
 				c.gameObject.layer = m_ChessLayer;
 			}
-			comp.Init(grid);
+			uiGrid.Init(grid);
+		}
+
+		private void OnTokenChanged(SxGrid grid, SxToken from, SxToken to)
+		{
+			if (m_TokenPrefab == null)
+			{
+				SxLog.Warning("Token prefab is not set. Cannot create token UI.");
+				return;
+			}
+
+			if (grid.UI is not Component comp)
+			{
+				SxLog.Error("Grid UI is not a Component. Cannot create token UI.");
+				return;	
+			}
+
+			if (from != null && from.UI is UIToken old)
+			{
+				m_TokenPool.Release(old);
+			}
+
+			if (to != null)
+			{
+				var t = comp.transform;
+				var pos = t.position + m_TokenOffset;
+				var rot = to.isWhite ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(180f, 0f, 0f);
+				var uiToken = m_TokenPool.Get();
+				uiToken.transform.SetPositionAndRotation(pos, rot);
+			}
 		}
 
 		#region Handle Click

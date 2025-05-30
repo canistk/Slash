@@ -16,7 +16,6 @@ namespace Slash.Core
                 SxLog.Error($"Invalid grid dimensions: {width}x{height}. Both dimensions must be greater than zero.");
                 return;
 			}
-
 			m_Grids = new SxGrid[width, height];
 			m_GridLookup = new Dictionary<string, SxGrid>(width * height);
 
@@ -125,22 +124,90 @@ namespace Slash.Core
 			return true;
 		}
 
-		#region Rule
-		eGameRule m_Rule = eGameRule.None;
-		public eGameRule Rule
-		{
-			get { return m_Rule; }
-			private set
-			{
-				if (m_Rule == value)
-					return;
-				m_Rule = value;
-				SxLog.Info($"Game rule changed to: {m_Rule}");
-				EVENT_GameRuleChanged?.Invoke(m_Rule);
-			}
+		#region State & Rule
+        private eGameRule m_Rule;
+		private eGameState m_State;
+		private eTurn m_Turn;
+		private SxLogicHandler m_Logic;
+
+		public void Init(eGameRule rule, eTurn turn)
+        {
+            if (m_State != eGameState.None)
+            {
+                SxLog.Error($"Cannot change game rule from {m_State} to {rule}. Game is already in progress.");
+                return;
+            }
+            m_State = eGameState.InitBoard;
+            m_Rule = rule;
+            m_Turn = turn;
+            if (TryGetLogicHandler(out m_Logic))
+            {
+                m_Logic.InitBoard(this);
+            }
+            else
+            {
+                SxLog.Error($"Failed to get logic handler for rule: {rule}");
+            }
+            m_State = eGameState.SolveConflict;
 		}
-		public void SetRule(eGameRule rule) => Rule = rule;
-		#endregion Rule
+
+        internal void ChangeState(object caller, eGameState state)
+        {
+            if (caller is not SxLogicHandler logic)
+                return;
+            if (m_Logic != logic)
+                return;
+
+            m_State = state;
+		}
+
+        private bool TryGetLogicHandler(out SxLogicHandler logic)
+        {
+            logic = default;
+            switch (m_Rule)
+            {
+                case eGameRule.Reversi:
+                    logic = new SxReversiLogicHandler();
+                    break;
+                case eGameRule.Gobang:
+                    //logic = new SxGobangLogicHandler();
+                    break;
+                case eGameRule.Checkers:
+                    //logic = new SxCheckersLogicHandler();
+                    break;
+                default:
+                    SxLog.Error($"Unsupported game rule: {m_Rule}");
+                    return false;
+			}
+            return logic != null;
+		}
+
+		public bool TryChangeMode(eGameRule rule)
+        {
+            if (m_State <= eGameState.InitBoard)
+            {
+                SxLog.Error($"Cannot change game rule from {m_Rule} to {rule}. call Init() instead.");
+                return false;
+            }
+            if (m_State == eGameState.ValidatingMove)
+            {
+                SxLog.Error($"Cannot change game rule from {m_Rule} to {rule}. Game is currently validating a move.");
+                return false;
+			}
+
+            m_Rule = rule;
+			if (TryGetLogicHandler(out m_Logic))
+			{
+				m_Logic.ChangeMode(this);
+			}
+			else
+			{
+				SxLog.Error($"Failed to get logic handler for rule: {rule}");
+			}
+            return true;
+		}
+
+		#endregion State & Rule
 
 		#region Events
 		public event System.Action<eGameRule> EVENT_GameRuleChanged;
@@ -159,29 +226,18 @@ namespace Slash.Core
         {
             // Handle the click event on the grid,
             // based on current game logic.
-
-
-            // grid.HasToken();
-
-            switch (Rule)
-            {
-                default:
-                case eGameRule.None:
-				SxLog.Error("No game rule set. Cannot handle click on grid.");
+            if (m_State != eGameState.WaitingForInput)
                 return false;
 
-                case eGameRule.Reversi:
-                // TODO: SxUtil.Reversi Rule
-                break;
+			// grid.HasToken();
+			if (m_Logic != null)
+			{
+				// m_Logic.InitBoard
 
-                case eGameRule.Gobang:
-                break;
+				return true;
+			}
 
-                case eGameRule.Checkers:
-                break;
-            }
-
-            SxLog.Error("Unhandled game rule: " + Rule);
+            SxLog.Error($"Unhandled game rule: {m_Rule}");
 			return false;
         }
     }

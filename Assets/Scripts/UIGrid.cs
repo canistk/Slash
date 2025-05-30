@@ -19,14 +19,14 @@ namespace Slash
 		private Vector3 m_OriginalRotation;
 		private void OnEnable()
 		{
-			m_OriginalPosition = transform.localPosition;
-			m_OriginalRotation = transform.localEulerAngles;
 		}
 
 		public void Init(SxGrid grid)
 		{
 			this.data = grid;
 			this.data.UI = this;
+			m_OriginalPosition = transform.localPosition;
+			m_OriginalRotation = transform.localEulerAngles;
 		}
 
 		public void HandleClick()

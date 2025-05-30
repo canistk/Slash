@@ -75,4 +75,15 @@ namespace Slash.Core
 		White = 1,	// White player's turn
 		Black = 2,	// Black player's turn
 	}
+
+	public enum eGameState
+	{
+		None = 0,
+		InitBoard,  // Initializing the board
+		SolveConflict, // Prepare for change mode, resolve rule's conflicts, ensure the board is ready for the next step
+
+		WaitingForInput, // player / enemy's turn, waiting for input
+		ValidatingMove,
+
+	}
 }

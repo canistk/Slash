@@ -50,8 +50,10 @@ MonoBehaviour:
     type: 3}
   m_GridBPrefab: {fileID: 3087455935212520871, guid: bbf0b36cf0980d141826ee8cab5a7915,
     type: 3}
+  m_GridOffset: {x: 0, y: -0.5, z: 0}
   m_TokenPrefab: {fileID: 5826893892472062670, guid: ea57fbed83aeea5489b3af6b91f397ee,
     type: 3}
+  m_TokenOffset: {x: 0, y: 0.6, z: 0}
   m_Distance: 1000
   m_LayerMask:
     serializedVersion: 2

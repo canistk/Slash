@@ -21,6 +21,7 @@ namespace Slash.Core
                 return $"{ch}{coord.y + 1}"; // e.g., A1, B2, etc.
 			}
         }
+
 		public SxGrid(int x, int y, SxBoard board)
         {
             this.coord = new Vector2Int(x, y);
@@ -65,28 +66,29 @@ namespace Slash.Core
             return token != null;
 		}
 
-        public static event System.Action<SxGrid> EVENT_TokenChanged;
+        public delegate void TokenChangeEvent(SxGrid grid, SxToken from, SxToken to);
+		public static event TokenChangeEvent EVENT_TokenChanged;
 		public void SetToken(SxToken newToken)
-        {
-            if (token != null)
+		{
+			var before = token;
+			if (token != null)
             {
                 SxLog.Warning("Token already on board, disposing the old token.");
                 token.Dispose();
 			}
-			if (newToken == null)
-                return;
 
             token = newToken;
-            if (token == null)
-                throw new System.ArgumentNullException(nameof(newToken), "Token cannot be null.");
-			token.LinkGrid(this);
-            EVENT_TokenChanged?.Invoke(this);
+            if (token != null)
+                token.LinkGrid(this);
+			EVENT_TokenChanged?.Invoke(this, before, token);
 		}
 
         public void ClearToken()
         {
-            token = null;
-			EVENT_TokenChanged?.Invoke(this);
+            var before = token;
+            if (token != null)
+                token.Dispose();
+            EVENT_TokenChanged?.Invoke(this, before, null);
 		}
 
         public void HandleUIClick(object caller)
