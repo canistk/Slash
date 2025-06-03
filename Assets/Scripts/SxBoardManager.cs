@@ -213,7 +213,13 @@ namespace Slash
 
 				try
 				{
-					grid.HandleClick();
+					if (!m_Board.TryApplyPlayerSelection(grid.data))
+						return;
+					
+					// accept the click and handle the UI animation
+					grid.HandleClick(); // UI animation
+
+
 					SxLog.Info($"Clicked on grid at position {grid.transform.position}", grid);
 					return; // only handle the first hit
 				}

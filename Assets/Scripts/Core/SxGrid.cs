@@ -91,7 +91,8 @@ namespace Slash.Core
             EVENT_TokenChanged?.Invoke(this, before, null);
 		}
 
-        public void HandleUIClick(object caller)
+        [System.Obsolete("Call board directly instead of this method.", true)]
+		public void HandleUIClick(object caller)
         {
             if (caller != UI)
                 throw new SxException("Caller does not match the UI instance of this grid.");

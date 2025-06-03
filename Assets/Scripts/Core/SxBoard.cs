@@ -239,15 +239,34 @@ namespace Slash.Core
                 return false;
 
 			// grid.HasToken();
-			if (m_Logic != null)
-			{
-				// m_Logic.InitBoard
-
-				return true;
+            if (!TryGetLogicHandler(out m_Logic))
+            {
+                SxLog.Error($"No logic handler found for rule: {m_Rule}");
+                return false;
 			}
 
-            SxLog.Error($"Unhandled game rule: {m_Rule}");
-			return false;
+            if (!m_Logic.TryPlaceToken(grid, m_Turn))
+            {
+                SxLog.Error($"Failed to place token on grid {grid.ReadableId} for turn {m_Turn}");
+                return false;
+			}
+
+            var token = m_Turn switch
+            {
+                eTurn.White => SxToken.CreateWhite(),
+                eTurn.Black => SxToken.CreateBlack(),
+                _ => throw new System.InvalidOperationException($"Invalid turn: {m_Turn}")
+            };
+
+            if (!m_Logic.IsValidMove(grid, token, out var data))
+            {
+			    SxLog.Error($"Unhandled game rule: {m_Rule}");
+                return false;
+            }
+
+            m_Logic.ExecuteMove(grid, token, data);
+
+			return true;
         }
     }
 }

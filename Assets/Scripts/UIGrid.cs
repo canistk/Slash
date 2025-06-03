@@ -13,7 +13,7 @@ namespace Slash
 			public float distance = 0.5f;
 		}
 		[SerializeField] private ClickVFX m_ClickVFX = new();
-		private SxGrid data;
+		public SxGrid data { get; private set; } = null;
 
 		private Vector3 m_OriginalPosition;
 		private Vector3 m_OriginalRotation;
@@ -38,7 +38,8 @@ namespace Slash
 			
 			InternalClicked();
 
-			data.HandleUIClick(this);
+			data.board.TryApplyPlayerSelection(data);
+			//data.HandleUIClick(this);
 		}
 
 

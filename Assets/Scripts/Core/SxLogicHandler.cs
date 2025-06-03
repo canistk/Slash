@@ -39,6 +39,15 @@ namespace Slash.Core
 		#region Utilities
 		public bool TryGetGrid(int x, int y, out SxGrid grid) => Board.TryGetGrid(x, y, out grid);
 
+		public bool TryPlaceToken(SxGrid grid, eTurn turn)
+		{
+			return TryPlaceToken(grid.coord, turn);
+		}
+
+		public bool TryPlaceToken(SxCoord coord, eTurn turn)
+		{
+			return TryPlaceToken(coord.x, coord.y, turn);
+		}
 
 		public bool TryPlaceToken(int x, int y, eTurn turn)
 		{
