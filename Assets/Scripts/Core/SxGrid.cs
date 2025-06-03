@@ -12,7 +12,7 @@ namespace Slash.Core
         public SxBoard board => m_Board;
         public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
 
-        public Vector2Int coord; // Unique identifier for the grid, can be used for debugging or UI purposes
+        public SxCoord coord; // Unique identifier for the grid, can be used for debugging or UI purposes
 		public string ReadableId
         {
             get
@@ -24,7 +24,7 @@ namespace Slash.Core
 
 		public SxGrid(int x, int y, SxBoard board)
         {
-            this.coord = new Vector2Int(x, y);
+            this.coord = new SxCoord(x, y);
 			this.m_Board    = board;
 			this.m_Arr      = new SxGrid[4];
 		}

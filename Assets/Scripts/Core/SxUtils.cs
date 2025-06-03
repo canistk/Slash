@@ -86,4 +86,33 @@ namespace Slash.Core
 		ValidatingMove,
 
 	}
+
+	public struct SxCoord
+	{
+		public int x;
+		public int y;
+		public SxCoord(int x, int y)
+		{
+			this.x = x;
+			this.y = y;
+		}
+		public override string ToString()
+		{
+			return $"({x}, {y})";
+		}
+		public override bool Equals(object obj)
+		{
+			if (obj is SxCoord coord)
+			{
+				return x == coord.x && y == coord.y;
+			}
+			return false;
+		}
+		public override int GetHashCode() => (x, y).GetHashCode();
+
+		public static bool operator ==(SxCoord a, SxCoord b) => a.Equals(b);
+		public static bool operator !=(SxCoord a, SxCoord b) => !a.Equals(b);
+		public static SxCoord operator +(SxCoord a, SxCoord b) => new SxCoord(a.x + b.x, a.y + b.y);
+		public static SxCoord operator -(SxCoord a, SxCoord b) => new SxCoord(a.x - b.x, a.y - b.y);
+	}
 }

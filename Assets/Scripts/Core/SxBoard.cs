@@ -44,7 +44,13 @@ namespace Slash.Core
                 }
             }
         }
-        public bool TryGetGrid(int x, int y, out SxGrid grid)
+
+        public bool TryGetGrid(SxCoord coord, out SxGrid grid)
+        {
+            return TryGetGrid(coord.x, coord.y, out grid);
+		}
+
+		public bool TryGetGrid(int x, int y, out SxGrid grid)
         {
             if (m_Grids == null ||
                 x < 0 || x >= m_Grids.GetLength(0) ||
@@ -128,6 +134,9 @@ namespace Slash.Core
         private eGameRule m_Rule;
 		private eGameState m_State;
 		private eTurn m_Turn;
+        public eGameRule Rule => m_Rule;
+        public eGameState State => m_State;
+        public eTurn Turn => m_Turn;
 		private SxLogicHandler m_Logic;
 
 		public void Init(eGameRule rule, eTurn turn)
