@@ -4,18 +4,46 @@ namespace Slash.Core
 {
     public class SxToken : System.IDisposable
 	{
-        public bool isWhite = false; // true for white, false for black
+        private eTurn m_Turn;
 		private bool isDisposed;
 		public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
+
+		public eTurn GetTurn()
+		{
+			if (isDisposed)
+			{
+				throw new System.ObjectDisposedException("SxToken", "Cannot access token after it has been disposed.");
+			}
+			return m_Turn;
+		}
+		public bool isWhite
+		{
+			get
+			{
+				switch(m_Turn)
+				{
+					case eTurn.White:
+						return true;
+					case eTurn.Black:
+						return false;
+					default:
+						throw new System.InvalidOperationException("Token is not initialized with a valid turn.");
+				}
+			}
+			private set
+			{
+				m_Turn = value ? eTurn.White : eTurn.Black;
+			}
+		}
 		public bool isBlack => !isWhite;
 
         public static SxToken CreateWhite()
         {
-            return new SxToken { isWhite = true };
+			return new SxToken { m_Turn = eTurn.White };
         }
         public static SxToken CreateBlack()
         {
-            return new SxToken { isWhite = false };
+            return new SxToken { m_Turn = eTurn.Black };
         }
         public override string ToString()
         {
