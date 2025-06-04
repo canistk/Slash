@@ -5,16 +5,13 @@ namespace Slash.Core
     public abstract class SxLogicHandler
     {
         public SxBoard Board { get; private set; }
-        public void InitBoard(SxBoard board)
-        {
-            if (board == null)
-            {
-                SxLog.Error("Board cannot be null.");
-                return;
-            }
-            this.Board = board;
-            OnInitBoard(board);
-        }
+
+		public SxLogicHandler(SxBoard board)
+		{
+			this.Board = board;
+			OnInitBoard(board);
+		}
+        
 		protected abstract void OnInitBoard(SxBoard board);
 
 

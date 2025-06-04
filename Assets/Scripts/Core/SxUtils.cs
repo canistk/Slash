@@ -84,7 +84,7 @@ namespace Slash.Core
 
 		WaitingForInput, // player / enemy's turn, waiting for input
 		ValidatingMove,
-
+		WaitingForNPC,
 	}
 
 	public struct SxCoord

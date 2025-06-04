@@ -12,13 +12,11 @@ namespace Slash.Core
 	/// </summary>
 	public class SxReversiLogicHandler : SxLogicHandler
 	{
+		public SxReversiLogicHandler(SxBoard board) : base(board)
+		{}
+
 		protected override void OnInitBoard(SxBoard board)
 		{
-			if (board == null)
-			{
-				SxLog.Error("Board cannot be null.");
-				return;
-			}
 			// Initialize the board with the starting positions for Reversi
 			board.GetGrid("D4").SetToken(SxToken.CreateWhite());
 			board.GetGrid("D5").SetToken(SxToken.CreateBlack());

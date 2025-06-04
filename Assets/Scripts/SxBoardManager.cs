@@ -80,6 +80,8 @@ namespace Slash
 		private void Update()
 		{
 			HandleRaycast();
+			if (m_Board != null)
+				m_Board.Update();
 		}
 
 		private SxBoard m_Board = null;
