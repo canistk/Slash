@@ -2,6 +2,7 @@ using Slash.Core;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 namespace Slash
 {
     public class UIGrid : UI3DRenderer
@@ -13,6 +14,7 @@ namespace Slash
 			public float distance = 0.5f;
 		}
 		[SerializeField] private ClickVFX m_ClickVFX = new();
+		[SerializeField] TMP_Text m_Label = null;
 		public SxGrid data { get; private set; } = null;
 
 		private Vector3 m_OriginalPosition;
@@ -27,6 +29,11 @@ namespace Slash
 			this.data.UI = this;
 			m_OriginalPosition = transform.localPosition;
 			m_OriginalRotation = transform.localEulerAngles;
+
+			if (m_Label)
+			{
+				m_Label.text = data.ReadableId;
+			}
 		}
 
 		public void HandleClick()
@@ -37,9 +44,6 @@ namespace Slash
 				throw new SetupException("UIGrid is not linked to the correct SxGrid instance. This can happen if the UIGrid is reused for another SxGrid without proper reinitialization.");
 			
 			InternalClicked();
-
-			data.board.TryApplyPlayerSelection(data);
-			//data.HandleUIClick(this);
 		}
 
 

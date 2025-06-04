@@ -80,10 +80,15 @@ namespace Slash.Core
 			{
 				if (disposing)
 				{
+					if (m_Grid.HasToken() && ReferenceEquals(m_Grid.token, this))
+					{
+						m_Grid.ClearToken();
+					}
 					m_Grid = null; // Unlink from parent grid
+					if (EVENT_Dispose != null)
+						EVENT_Dispose.Invoke();
 				}
 
-				EVENT_Dispose.Invoke();
 				EVENT_Flipped = null;
 				EVENT_Dispose = null;
 				isDisposed = true;

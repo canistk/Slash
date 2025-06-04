@@ -59,11 +59,11 @@ namespace Slash.Core
 			}
 
 			// Check if the grid is empty
-			if (grid.HasToken())
-			{
-				SxLog.Error($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
-				return false;
-			}
+			//if (grid.HasToken())
+			//{
+			//	SxLog.Error($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
+			//	return false;
+			//}
 
 			// Check if the token is valid
 			if (Board.Turn != token.GetTurn())
@@ -145,24 +145,24 @@ namespace Slash.Core
 			//}
 
 			var tokenTurn = token.GetTurn();
-			var current = anchor.coord + dir;
+			var current = anchor.coord;
 			// Check if the first grid in the direction has a token
 			{
 				if (!Board.TryGetGrid(current, out var firstGrid))
 				{
-					SxLog.Error($"Logic Error, grid {current} does not exist on the board.");
+					SxLog.Error($"Logic Error, grid {current.ReadableId} does not exist on the board.");
 					return false;
 				}
 
 				if (!firstGrid.HasToken())
 				{
-					SxLog.Error($"Grid {current} does not have a token to eat.");
+					SxLog.Error($"Grid {current.ReadableId} does not have a token to eat.");
 					return false;
 				}
 
 				if (firstGrid.token.GetTurn() == tokenTurn)
 				{
-					SxLog.Error($"Grid {current} has a token of the same color as the current token. Cannot eat.");
+					SxLog.Error($"Grid {current.ReadableId} has a token of the same color as the current token {tokenTurn}. Cannot eat.");
 					return false;
 				}
 

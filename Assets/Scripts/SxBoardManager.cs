@@ -156,7 +156,7 @@ namespace Slash
 				return;
 			}
 
-			if (grid.UI is not Component comp)
+			if (grid.UI is not UIGrid uiGrid)
 			{
 				SxLog.Error("Grid UI is not a Component. Cannot create token UI.");
 				return;	
@@ -169,11 +169,12 @@ namespace Slash
 
 			if (to != null)
 			{
-				var t = comp.transform;
-				var pos = t.position + m_TokenOffset;
-				var rot = to.isWhite ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(180f, 0f, 0f);
+				//var t = uiGrid.transform;
+				//var pos = t.position + m_TokenOffset;
+				// var rot = to.isWhite ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(180f, 0f, 0f);
 				var uiToken = m_TokenPool.Get();
-				uiToken.transform.SetPositionAndRotation(pos, rot);
+				uiToken.Init(to);
+				// uiToken.transform.SetPositionAndRotation(pos, rot);
 			}
 		}
 
@@ -215,6 +216,8 @@ namespace Slash
 
 				try
 				{
+					var id = grid?.data == null ? "null" : grid.data.ReadableId;
+					SxLog.Info($"Clicked on grid at position {id}{grid.transform.position}", grid);
 					if (!m_Board.TryApplyPlayerSelection(grid.data))
 						return;
 					
@@ -222,7 +225,6 @@ namespace Slash
 					grid.HandleClick(); // UI animation
 
 
-					SxLog.Info($"Clicked on grid at position {grid.transform.position}", grid);
 					return; // only handle the first hit
 				}
 				catch (System.Exception ex)

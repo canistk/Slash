@@ -86,17 +86,10 @@ namespace Slash.Core
         public void ClearToken()
         {
             var before = token;
-            if (token != null)
-                token.Dispose();
+            token = null;
+            if (before != null)
+				before.Dispose();
             EVENT_TokenChanged?.Invoke(this, before, null);
-		}
-
-        [System.Obsolete("Call board directly instead of this method.", true)]
-		public void HandleUIClick(object caller)
-        {
-            if (caller != UI)
-                throw new SxException("Caller does not match the UI instance of this grid.");
-            board.TryApplyPlayerSelection(this);
 		}
 	}
 }

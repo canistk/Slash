@@ -100,6 +100,16 @@ namespace Slash.Core
 		{
 			return $"({x}, {y})";
 		}
+
+		public string ReadableId
+		{
+			get
+			{
+				var ch = (char)('A' + x);
+				return $"{ch}{y + 1}"; // e.g., A1, B2, etc.
+			}
+		}
+
 		public override bool Equals(object obj)
 		{
 			if (obj is SxCoord coord)

@@ -109,29 +109,6 @@ namespace Slash.Core
             return grid.HasToken();
         }
 
-        public bool TrySetToken(int x, int y, SxToken token)
-        {
-            if (token == null)
-            {
-                SxLog.Error("Token cannot be null.");
-                return false;
-            }
-
-            if (!TryGetGrid(x, y, out var grid))
-            {
-                return false;
-            }
-
-            if (grid == null)
-            {
-                SxLog.Error($"No grid found at ({x}, {y})");
-                return false;
-            }
-
-            grid.SetToken(token);
-            return true;
-        }
-
         #region State & Rule
         private eGameRule m_Rule;
         private eGameState m_State;
@@ -253,12 +230,6 @@ namespace Slash.Core
                 return false;
             }
 
-            if (!logic.TryPlaceToken(grid, m_Turn))
-            {
-                SxLog.Error($"Failed to place token on grid {grid.ReadableId} for turn {m_Turn}");
-                return false;
-            }
-
             var token = m_Turn switch
             {
                 eTurn.White => SxToken.CreateWhite(),
@@ -269,16 +240,23 @@ namespace Slash.Core
             m_State = eGameState.ValidatingMove;
 			if (!logic.IsValidMove(grid, token, out var data))
             {
-                SxLog.Error($"Unhandled game rule: {m_Rule}");
+                SxLog.Error($"Blocked by game rule: {m_Rule}");
                 m_State = eGameState.WaitingForInput;
 				return false;
-            }
+			}
 
-            logic.ExecuteMove(grid, token, data);
+			if (!logic.TryPlaceToken(grid, m_Turn))
+			{
+				SxLog.Error($"Failed to place token on grid {grid.ReadableId} for turn {m_Turn}");
+				return false;
+			}
 
-            // After executing the move, change the turn
-            m_State = eGameState.WaitingForNPC;
-            EndTurn();
+			logic.ExecuteMove(grid, token, data);
+
+			// After executing the move, change the turn
+			// m_State = eGameState.WaitingForNPC;
+			m_State = eGameState.WaitingForInput;
+			EndTurn();
 			return true;
         }
 
