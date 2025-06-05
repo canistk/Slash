@@ -6,8 +6,8 @@ namespace Slash.Core
 {
 	public class SxGrid
     {
-		public SxToken token;
-        private SxGrid[] m_Arr; // 0 = left, 1 = up, 2 = right, 3 = down
+        public SxToken token { get; private set; } = null;
+		private SxGrid[] m_Arr; // 0 = left, 1 = up, 2 = right, 3 = down
         private SxBoard m_Board;
         public SxBoard board => m_Board;
         public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
@@ -66,30 +66,29 @@ namespace Slash.Core
             return token != null;
 		}
 
-        public delegate void TokenChangeEvent(SxGrid grid, SxToken from, SxToken to);
-		public static event TokenChangeEvent EVENT_TokenChanged;
-		public void SetToken(SxToken newToken)
+		public static event LinkTokenEvent EVENT_Linked, EVENT_Unlinked;
+		public static event System.Action<SxGrid> EVENT_Updated;
+		public void Link(SxToken newToken)
 		{
 			var before = token;
-			if (token != null)
-            {
-                SxLog.Warning("Token already on board, disposing the old token.");
-                token.Dispose();
+            token = newToken;
+            if (before != null && ReferenceEquals(before.GetGrid(), this))
+			{
+				before.Link(null); // remove
+				EVENT_Unlinked?.Invoke(this, before);
 			}
 
-            token = newToken;
-            if (token != null)
-                token.LinkGrid(this);
-			EVENT_TokenChanged?.Invoke(this, before, token);
+			if (newToken != null)
+            {
+                if (!ReferenceEquals(newToken.GetGrid(), this))
+				    newToken.Link(this); // link to THIS grid
+				EVENT_Linked?.Invoke(this, newToken);
+			}
+
+			EVENT_Updated?.Invoke(this);
 		}
 
-        public void ClearToken()
-        {
-            var before = token;
-            token = null;
-            if (before != null)
-				before.Dispose();
-            EVENT_TokenChanged?.Invoke(this, before, null);
-		}
 	}
+	public delegate void LinkTokenEvent(SxGrid grid, SxToken token);
+
 }

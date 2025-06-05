@@ -4,7 +4,11 @@ namespace Slash.Core
 {
     public class SxToken : System.IDisposable
 	{
-        private eTurn m_Turn;
+		public static event LinkTokenEvent EVENT_Linked, EVENT_Unlinked;
+		public static event System.Action<SxToken> EVENT_Disposed;
+		public static event System.Action<SxToken> EVENT_Updated;
+
+		private eTurn m_Turn;
 		private bool isDisposed;
 		public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
 
@@ -50,47 +54,71 @@ namespace Slash.Core
             return isWhite ? "White Token" : "Black Token";
         }
 
-        public event System.Action EVENT_Flipped;
+		private void TriggerUpdate()
+		{
+			try
+			{
+				EVENT_Updated?.Invoke(this);
+			}
+			catch (System.Exception ex)
+			{
+				SxLog.Error($"Error during token update event. \n{ex.Message}");
+			}
+		}
 
         public void Flip()
         {
             isWhite = !isWhite;
-            EVENT_Flipped?.Invoke();
+			TriggerUpdate();
 		}
 
 		private SxGrid m_Grid = null;
-		internal void LinkGrid(SxGrid grid)
+		internal void Link(SxGrid grid)
 		{
+			var before = m_Grid;
+			if (before != null && ReferenceEquals(before.token, this))
+			{
+				before.Link(null); // remove link from previous grid
+				EVENT_Unlinked?.Invoke(before, this);
+			}
+			
 			this.m_Grid = grid;
+
+			if (grid != null)
+			{
+				if (!ReferenceEquals(grid.token, this))
+					grid.Link(this); // link to new grid
+				EVENT_Linked?.Invoke(grid, this);
+			}
+
+			EVENT_Updated?.Invoke(this);
 		}
 		public SxGrid GetGrid()
 		{
-			if (m_Grid == null)
-			{
-				throw new System.InvalidOperationException("Token is not linked to any grid.");
-			}
 			return m_Grid;
 		}
 
 		#region Disposable
-		public event System.Action EVENT_Dispose;
 		protected virtual void Dispose(bool disposing)
 		{
 			if (!isDisposed)
 			{
 				if (disposing)
 				{
-					if (m_Grid.HasToken() && ReferenceEquals(m_Grid.token, this))
+					if (m_Grid != null &&
+						m_Grid.HasToken() &&
+						ReferenceEquals(m_Grid.token, this))
 					{
-						m_Grid.ClearToken();
+						// remove THIS token in the grid
+						m_Grid.Link(null);
 					}
 					m_Grid = null; // Unlink from parent grid
-					if (EVENT_Dispose != null)
-						EVENT_Dispose.Invoke();
+					if (EVENT_Disposed != null)
+						EVENT_Disposed.Invoke(this);
 				}
 
-				EVENT_Flipped = null;
-				EVENT_Dispose = null;
+				EVENT_Updated = null;
+				EVENT_Disposed = null;
 				isDisposed = true;
 			}
 		}

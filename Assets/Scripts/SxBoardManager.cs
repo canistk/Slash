@@ -40,7 +40,6 @@ namespace Slash
 		[SerializeField] GameObject m_GridBPrefab = null;
 		[SerializeField] Vector3 m_GridOffset = new Vector3(0f, -0.5f, 0f);
 		[SerializeField] GameObject m_TokenPrefab = null;
-		[SerializeField] Vector3 m_TokenOffset = new Vector3(0f, 0.5f, 0f);
 		ObjectPool<UIToken> m_TokenPool;
 		private void Awake()
 		{
@@ -100,16 +99,19 @@ namespace Slash
                 ResetBoard();
 			}
 			m_Board = new SxBoard(width, height, OnGridCreated);
-			SxGrid.EVENT_TokenChanged -= OnTokenChanged;
-			SxGrid.EVENT_TokenChanged += OnTokenChanged;
-            m_Board.Init(rule, eTurn.White);
+			SxGrid.EVENT_Linked += OnSpawnToken;
+			SxGrid.EVENT_Unlinked += OnDespawnToken;
+			SxToken.EVENT_Updated += EVENT_onTokenUpdated;
+			m_Board.Init(rule, eTurn.White);
 			EVENT_BoardCreated?.Invoke();
 		}
 
 		public void ResetBoard()
         {
             m_Board = null;
-			SxGrid.EVENT_TokenChanged -= OnTokenChanged;
+			SxGrid.EVENT_Linked -= OnSpawnToken;
+			SxGrid.EVENT_Unlinked -= OnDespawnToken;
+			SxToken.EVENT_Updated -= EVENT_onTokenUpdated;
 			EVENT_BoardReset?.Invoke();
 			SxLog.Info("Board has been reset.");
 		}
@@ -148,34 +150,41 @@ namespace Slash
 			uiGrid.Init(grid);
 		}
 
-		private void OnTokenChanged(SxGrid grid, SxToken from, SxToken to)
+		Dictionary<SxToken, UIToken> m_TokenMap = new Dictionary<SxToken, UIToken>();
+		private void OnSpawnToken(SxGrid grid, SxToken token)
 		{
-			if (m_TokenPrefab == null)
+			if (!m_TokenMap.TryGetValue(token, out var uiToken))
 			{
-				SxLog.Warning("Token prefab is not set. Cannot create token UI.");
+				uiToken = m_TokenPool.Get();
+				uiToken.Init(token);
+				m_TokenMap.Add(token, uiToken);
+			}
+		}
+
+		private void OnDespawnToken(SxGrid grid, SxToken token)
+		{
+			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+			{
+				uiToken = token.UI as UIToken;
+				if (uiToken == null)
+				{
+					SxLog.Warning("Token UI is not a UIToken. Cannot release token UI.");
+					return;
+				}
+			}
+			if (uiToken == null)
 				return;
-			}
+			m_TokenMap.Remove(token);
+			m_TokenPool.Release(uiToken);
+		}
 
-			if (grid.UI is not UIGrid uiGrid)
-			{
-				SxLog.Error("Grid UI is not a Component. Cannot create token UI.");
-				return;	
-			}
+		private void EVENT_onTokenUpdated(SxToken token)
+		{
+			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+				return;
 
-			if (from != null && from.UI is UIToken old)
-			{
-				m_TokenPool.Release(old);
-			}
-
-			if (to != null)
-			{
-				//var t = uiGrid.transform;
-				//var pos = t.position + m_TokenOffset;
-				// var rot = to.isWhite ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(180f, 0f, 0f);
-				var uiToken = m_TokenPool.Get();
-				uiToken.Init(to);
-				// uiToken.transform.SetPositionAndRotation(pos, rot);
-			}
+			// only updated whenever it's being found.
+			uiToken.Init(token);
 		}
 
 		#region Handle Click

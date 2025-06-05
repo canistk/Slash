@@ -18,10 +18,10 @@ namespace Slash.Core
 		protected override void OnInitBoard(SxBoard board)
 		{
 			// Initialize the board with the starting positions for Reversi
-			board.GetGrid("D4").SetToken(SxToken.CreateWhite());
-			board.GetGrid("D5").SetToken(SxToken.CreateBlack());
-			board.GetGrid("E4").SetToken(SxToken.CreateBlack());
-			board.GetGrid("E5").SetToken(SxToken.CreateWhite());
+			board.GetGrid("D4").Link(SxToken.CreateWhite());
+			board.GetGrid("D5").Link(SxToken.CreateBlack());
+			board.GetGrid("E4").Link(SxToken.CreateBlack());
+			board.GetGrid("E5").Link(SxToken.CreateWhite());
 		}
 
 
@@ -110,7 +110,7 @@ namespace Slash.Core
 				return;
 			}
 
-			grid.SetToken(token); // Place the token on the grid
+			grid.Link(token); // Place the token on the grid
 			for (int i = 0; i < eatList.Count; i++)
 			{
 				var eatGrid = eatList[i];
@@ -124,7 +124,9 @@ namespace Slash.Core
 					SxLog.Error($"Eat grid {eatGrid.ReadableId} does not have a token to eat. This should not happen.");
 					continue;
 				}
-				eatGrid.ClearToken(); // Remove the token from the grid
+
+				//eatGrid.Link(null); // Remove the token from the grid
+				eatGrid.token.Dispose();
 			}
 		}
 

@@ -79,7 +79,7 @@ namespace Slash.Core
 				SxLog.Warning($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
 				return false;
 			}
-			grid.SetToken(token);
+			grid.Link(token);
 			return true;
 		}
 		#endregion Utilities
