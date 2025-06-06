@@ -45,17 +45,25 @@ namespace Slash.Core
 			throw new System.NotImplementedException();
 		}
 
-		public override bool IsValidMove(SxGrid grid, SxToken token, out object data)
+		public override bool IsValidMove(SxGrid grid, SxToken token, out object data, bool throwError = false)
 		{
+			bool _RuleError(string message)
+			{
+				var ex = new SxRuleException(message);
+				if (throwError)
+					throw ex;
+				SxLog.Error(ex);
+				return false;
+			}
+
 			data = null;
 			// rules for Reversi:
 			// 1) the grid must be empty
 			// 2) the move must be adjacent to an existing token of the different color
-			// 3) at least eat one token of the opposite color
+			// 3) at least flip one token of the opposite color
 			if (grid == null || token == null)
 			{
-				SxLog.Error("Invalid grid or token provided.");
-				return false;
+				return _RuleError("Invalid grid or token provided.");
 			}
 
 			// Check if the grid is empty
@@ -68,76 +76,106 @@ namespace Slash.Core
 			// Check if the token is valid
 			if (Board.Turn != token.GetTurn())
 			{
-				SxLog.Error($"Invalid turn. Expected {Board.Turn}, but attempt to place {token.GetTurn()}.");
-				return false;
+				return _RuleError($"Invalid turn. Expected {Board.Turn}, but attempt to place {token.GetTurn()}.");
 			}
 
 			var anchor = grid.coord;
 			var tokenTurn = token.GetTurn();
+			var flipList = new List<SxGrid>(8); // Initialize the flip list
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine($"Anchor {grid.ReadableId}:{anchor}");
 			foreach (var g in GetAdjacentGrids(grid))
 			{
 				if (g == null)
+				{
 					throw new System.Exception("Adjacent grid is null. This should not happen.");
+				}
+
+				var direction = g.coord - anchor;
+				sb.Append($"{g.ReadableId} direction:({direction})");
 				if (!g.HasToken())
+				{
+					sb.AppendLine(" no token to flip");
 					continue;
+				}
 
 				// ignore same color tokens
 				if (g.token.GetTurn() == tokenTurn)
+				{
+					sb.AppendLine(" same team, ignore.");
 					continue;
+				}
 
-				var vector = g.coord - anchor;
-				// ignore grids that cannot be eaten
-				if (!CanEat(g, token, vector, out var eatList))
+				try
+				{
+					// try flip to the end, based on vector direction.
+					if (!CanFlip(g, token, direction, out var flipRows))
+					{
+						sb.AppendLine(" cannot flipped.");
+						continue; // ignore grids that cannot be flip
+					}
+
+					sb.AppendLine($" valid row found {flipRows.Count}.");
+					flipList.AddRange(flipRows);
+				}
+				catch (System.Exception ex)
+				{
+					if (throwError)
+						throw ex;
+					SxLog.Error($"Logic Error: {ex.Message}\n{sb.ToString()}");
 					continue;
-
-				data = eatList; // return the list of grids that can be eaten
-				return true;
+				}
 			}
-			return false;
+
+			data = flipList; // return the list of grids that can be flip
+			if (flipList.Count == 0 && throwError)
+			{
+				throw new SxRuleException($"Invalid : Unable to flip on all direction.\n{sb.ToString()}");
+			}
+			SxLog.Info($"Valid move {anchor}, \n{sb.ToString()}");
+			return flipList.Count > 0;
 		}
 
 		public override void ExecuteMove(SxGrid grid, SxToken token, object data)
 		{
-			if (data == null || !(data is List<SxGrid> eatList))
+			if (data == null || !(data is List<SxGrid> flipList))
 			{
 				SxLog.Error("Invalid data provided for executing move.");
 				return;
 			}
 
-			if (eatList.Count == 0)
+			if (flipList.Count == 0)
 			{
-				SxLog.Error("No tokens to eat. This should not happen if the move is valid.");
+				SxLog.Error("No tokens to flip. This should not happen if the move is valid.");
 				return;
 			}
 
 			grid.Link(token); // Place the token on the grid
-			for (int i = 0; i < eatList.Count; i++)
+			for (int i = 0; i < flipList.Count; i++)
 			{
-				var eatGrid = eatList[i];
-				if (eatGrid == null)
+				var flipGrid = flipList[i];
+				if (flipGrid == null)
 				{
-					SxLog.Error($"Eat grid at index {i} is null. This should not happen.");
+					SxLog.Error($"flip grid at index {i} is null. This should not happen.");
 					continue;
 				}
-				if (!eatGrid.HasToken())
+				if (!flipGrid.HasToken())
 				{
-					SxLog.Error($"Eat grid {eatGrid.ReadableId} does not have a token to eat. This should not happen.");
+					SxLog.Error($"flip grid {flipGrid.ReadableId} does not have a token to flip. This should not happen.");
 					continue;
 				}
 
-				//eatGrid.Link(null); // Remove the token from the grid
-				eatGrid.token.Dispose();
+				flipGrid.token.Flip();
 			}
 		}
 
-		private bool CanEat(SxGrid anchor, SxToken token, SxCoord dir, out List<SxGrid> eatList)
+		private bool CanFlip(SxGrid anchor, SxToken token, SxCoord dir, out List<SxGrid> flipList)
 		{
-			eatList = new List<SxGrid>(8); // Initialize if not provided
+			flipList = new List<SxGrid>(8); // Initialize if not provided
 
 			if (anchor == null || token == null || dir == null)
 			{
-				SxLog.Error("Invalid anchor, token, or direction provided.");
-				return false;
+				throw new System.Exception("Invalid anchor, token, or direction provided.");
 			}
 
 			//if (anchor.HasToken())
@@ -152,23 +190,23 @@ namespace Slash.Core
 			{
 				if (!Board.TryGetGrid(current, out var firstGrid))
 				{
-					SxLog.Error($"Logic Error, grid {current.ReadableId} does not exist on the board.");
+					// throw new System.Exception($"Logic Error, grid {current.ReadableId} does not exist on the board.");
 					return false;
 				}
 
 				if (!firstGrid.HasToken())
 				{
-					SxLog.Error($"Grid {current.ReadableId} does not have a token to eat.");
+					SxLog.Warning($"Grid {current.ReadableId} does not have a token to flip.");
 					return false;
 				}
 
 				if (firstGrid.token.GetTurn() == tokenTurn)
 				{
-					SxLog.Error($"Grid {current.ReadableId} has a token of the same color as the current token {tokenTurn}. Cannot eat.");
+					SxLog.Warning($"Grid {current.ReadableId} has a token of the same color as the current token {tokenTurn}. Cannot flip.");
 					return false;
 				}
 
-				eatList.Add(firstGrid);
+				flipList.Add(firstGrid);
 				current += dir; // move in the direction
 			}
 
@@ -178,15 +216,15 @@ namespace Slash.Core
 				var isOpponent = grid.token.GetTurn() != tokenTurn;
 				if (!isOpponent)
 				{
-					// We found a token of the same color, can eat
+					// We found a token of the same color, can flip
 					return true;
 				}
-				eatList.Add(grid); // add the opponent's token to the eat list
+				flipList.Add(grid); // add the opponent's token to the flip list
 				current += dir; // move in the direction
 			}
 
 			// If we reach here, it means we didn't find a token of the same color in the direction
-			eatList.Clear();
+			flipList.Clear();
 			return false;
 		}
 

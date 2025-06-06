@@ -2,6 +2,8 @@ using Slash.Core.Tasks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
 namespace Slash.Core
 {
     public class SxBoard
@@ -208,6 +210,8 @@ namespace Slash.Core
         public delegate void BoardCreated(SxBoard board);
         #endregion Events
 
+        public bool IsWaitingForPlayer => m_State == eGameState.WaitingForInput;
+
         /// <summary>
         /// Tries to apply the player's selection on the grid.
         /// </summary>
@@ -216,18 +220,16 @@ namespace Slash.Core
         /// true = accept player selection, place or flip token.
         /// false = reject player selection, do not execute require.
         /// </returns>
-        public bool TryApplyPlayerSelection(SxGrid grid)
+        public void ApplyPlayerSelection(SxGrid grid)
         {
             // Handle the click event on the grid,
             // based on current game logic.
             if (m_State != eGameState.WaitingForInput)
-                return false;
+                throw new Exception($"Cannot apply player selection in state {m_State}. Expected WaitingForInput.");
 
-            // grid.HasToken();
-            if (!TryGetLogicHandler(out var logic))
+			if (!TryGetLogicHandler(out var logic))
             {
-                SxLog.Error($"No logic handler found for rule: {m_Rule}");
-                return false;
+                throw new System.InvalidOperationException($"No logic handler found for rule: {m_Rule}");
             }
 
             var token = m_Turn switch
@@ -238,26 +240,37 @@ namespace Slash.Core
             };
 
             m_State = eGameState.ValidatingMove;
-			if (!logic.IsValidMove(grid, token, out var data))
+            try
             {
-                SxLog.Error($"Blocked by game rule: {m_Rule}");
+				if (!logic.IsValidMove(grid, token, out var data, throwError: true))
+                {
+                    throw new SxRuleException("Invalid move, reset state and return");
+                }
+
+				if (!logic.TryPlaceToken(grid, m_Turn))
+				{
+					throw new System.Exception($"Failed to place token({m_Turn}) on grid {grid.ReadableId}.");
+				}
+
+				logic.ExecuteMove(grid, token, data);
+			}
+            catch (SxRuleException ex)
+            {
+				m_State = eGameState.WaitingForInput;
+                throw ex;
+			}
+            catch (System.Exception ex)
+            {
                 m_State = eGameState.WaitingForInput;
-				return false;
+                throw new System.Exception($"Error while validating move: {ex.Message}\n{ex.StackTrace}");
 			}
 
-			if (!logic.TryPlaceToken(grid, m_Turn))
-			{
-				SxLog.Error($"Failed to place token on grid {grid.ReadableId} for turn {m_Turn}");
-				return false;
-			}
 
-			logic.ExecuteMove(grid, token, data);
-
-			// After executing the move, change the turn
+            // After executing the move, change the turn
+            SxLog.Info($"Valid move {grid.ReadableId}, End turn");
 			// m_State = eGameState.WaitingForNPC;
 			m_State = eGameState.WaitingForInput;
 			EndTurn();
-			return true;
         }
 
         private void EndTurn()

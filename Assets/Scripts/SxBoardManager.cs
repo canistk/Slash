@@ -201,6 +201,9 @@ namespace Slash
 				return;
 			if (!Input.GetMouseButtonUp(0))
 				return;
+			if (!m_Board.IsWaitingForPlayer)
+				return;
+
 			if (m_Hits == null || m_Hits.Length != m_HitBuffer)
 			{
 				m_Hits = new RaycastHit[m_HitBuffer];
@@ -227,18 +230,28 @@ namespace Slash
 				{
 					var id = grid?.data == null ? "null" : grid.data.ReadableId;
 					SxLog.Info($"Clicked on grid at position {id}{grid.transform.position}", grid);
-					if (!m_Board.TryApplyPlayerSelection(grid.data))
-						return;
-					
-					// accept the click and handle the UI animation
-					grid.HandleClick(); // UI animation
+					try
+					{
+						m_Board.ApplyPlayerSelection(grid.data);
 
+						// accept the click and handle the UI animation
+						grid.HandleClick(); // UI animation
+						return; // only handle the first hit
+					}
+					catch (SxRuleException ex)
+					{
+						SxLog.Warning($"{ex.Message}");
+						return; // skip to the next hit
+					}
+					catch (System.Exception ex)
+					{
+						throw ex;
+					}
 
-					return; // only handle the first hit
 				}
 				catch (System.Exception ex)
 				{
-					SxLog.Error($"Error handling click on grid: {ex.Message}");
+					SxLog.Error($"Unknown Error handling click on grid: {ex.Message}");
 					continue;
 				}
 			}

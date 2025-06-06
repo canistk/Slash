@@ -24,8 +24,35 @@ namespace Slash.Core
 		public SxException() : base() { }
 	}
 
+	public class SxRuleException : SxException
+	{
+		public SxRuleException(string msg, System.Exception innerException) : base(msg, innerException) { }
+		public SxRuleException(string msg) : base(msg) { }
+		public SxRuleException() : base() { }
+	}
+
 	public static class SxLog
 	{
+		public static void Error(System.Exception exception, UnityEngine.Object obj = null)
+		{
+			if (exception == null)
+			{
+				Error("Exception is null.", obj);
+				return;
+			}
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine(exception.Message);
+			sb.AppendLine("Stack Trace:");
+			sb.AppendLine(exception.StackTrace);
+
+			while (exception.InnerException != null)
+			{
+				exception = exception.InnerException;
+				sb.AppendLine("------\nInner Exception:");
+				sb.AppendLine(exception.Message);
+			}
+			UnityEngine.Debug.LogError(sb.ToString(), obj);
+		}
 		public static void Error(string message, UnityEngine.Object obj = null)
 		{
 			UnityEngine.Debug.LogError(message, obj);

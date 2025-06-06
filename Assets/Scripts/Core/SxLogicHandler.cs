@@ -29,7 +29,7 @@ namespace Slash.Core
 
 		public abstract void SolveConflict();
 
-		public abstract bool IsValidMove(SxGrid grid, SxToken token, out object data);
+		public abstract bool IsValidMove(SxGrid grid, SxToken token, out object data, bool throwError = false);
 
 		public abstract void ExecuteMove(SxGrid grid, SxToken token, object data);
 
