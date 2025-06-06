@@ -82,13 +82,35 @@ namespace Slash.Core
 			grid.Link(token);
 			return true;
 		}
+
+		/// <summary>
+		/// Retrieves all adjacent grids around the specified grid.
+		/// based on clockwise order: LB, L, LT, T, RT, R, RB, B
+		/// </summary>
+		/// <param name="grid"></param>
+		/// <returns></returns>
+		protected IEnumerable<SxGrid> GetAdjacentGrids(SxGrid grid)
+		{
+			if (grid == null)
+			{
+				SxLog.Error("Invalid grid or token provided.");
+				yield break;
+			}
+
+			var anchor = grid.coord;
+			var obj = default(SxGrid);
+			// Clockwise : LB, L, LT, T, RT, R, RB, B
+			if (Board.TryGetGrid(anchor.x - 1, anchor.y + 1, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x - 1, anchor.y + 0, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x - 1, anchor.y - 1, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x + 0, anchor.y - 1, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x + 1, anchor.y - 1, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x + 1, anchor.y + 0, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x + 1, anchor.y + 1, out obj)) yield return obj;
+			if (Board.TryGetGrid(anchor.x + 0, anchor.y + 1, out obj)) yield return obj;
+		}
 		#endregion Utilities
 	}
-
-
-	//public class  SxGobangLogicHandler : SxLogicHandler
-	//{	
-	//}
 
  //   public class SxCheckersLogicHandler : SxLogicHandler
  //   {

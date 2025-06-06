@@ -229,7 +229,7 @@ namespace Slash
 				try
 				{
 					var id = grid?.data == null ? "null" : grid.data.ReadableId;
-					SxLog.Info($"Clicked on grid at position {id}{grid.transform.position}", grid);
+					SxLog.Info($"Clicked on grid at position {id}{grid.data.coord}", grid);
 					try
 					{
 						m_Board.ApplyPlayerSelection(grid.data);

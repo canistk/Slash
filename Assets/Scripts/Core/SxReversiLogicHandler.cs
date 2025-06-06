@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 namespace Slash.Core
 {
 
@@ -57,21 +56,10 @@ namespace Slash.Core
 			}
 
 			data = null;
-			// rules for Reversi:
-			// 1) the grid must be empty
-			// 2) the move must be adjacent to an existing token of the different color
-			// 3) at least flip one token of the opposite color
 			if (grid == null || token == null)
 			{
 				return _RuleError("Invalid grid or token provided.");
 			}
-
-			// Check if the grid is empty
-			//if (grid.HasToken())
-			//{
-			//	SxLog.Error($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
-			//	return false;
-			//}
 
 			// Check if the token is valid
 			if (Board.Turn != token.GetTurn())
@@ -79,6 +67,15 @@ namespace Slash.Core
 				return _RuleError($"Invalid turn. Expected {Board.Turn}, but attempt to place {token.GetTurn()}.");
 			}
 
+			if (grid.HasToken())
+			{
+				return _RuleError($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
+			}
+
+			// rules for Reversi:
+			// 1) the grid must be empty
+			// 2) the move must be adjacent to an existing token of the different color
+			// 3) at least flip one token of the opposite color
 			var anchor = grid.coord;
 			var tokenTurn = token.GetTurn();
 			var flipList = new List<SxGrid>(8); // Initialize the flip list
@@ -140,17 +137,25 @@ namespace Slash.Core
 		{
 			if (data == null || !(data is List<SxGrid> flipList))
 			{
-				SxLog.Error("Invalid data provided for executing move.");
-				return;
+				throw new System.Exception("Invalid data provided for executing move.");
 			}
 
 			if (flipList.Count == 0)
 			{
-				SxLog.Error("No tokens to flip. This should not happen if the move is valid.");
-				return;
+				throw new System.Exception("No tokens to flip. This should not happen if the move is valid.");
 			}
 
-			grid.Link(token); // Place the token on the grid
+			// Assumeing the grid already has the target token placed.
+			if (!grid.HasToken() || grid.token != token)
+			{
+				throw new System.Exception($"Grid {grid.ReadableId} does not have the token to place. Expected {token}, but found {grid.token}.");
+			}
+
+			if (!TryPlaceToken(grid, token)) // Place the token on the grid
+			{
+				throw new System.Exception($"Failed to place token({token.GetTurn()}) on grid {grid.ReadableId}.");
+			}
+
 			for (int i = 0; i < flipList.Count; i++)
 			{
 				var flipGrid = flipList[i];
@@ -228,31 +233,5 @@ namespace Slash.Core
 			return false;
 		}
 
-		/// <summary>
-		/// Retrieves all adjacent grids around the specified grid.
-		/// based on order: LB, L, LT, T, RT, R, RB, B
-		/// </summary>
-		/// <param name="grid"></param>
-		/// <returns></returns>
-		private IEnumerable<SxGrid> GetAdjacentGrids(SxGrid grid)
-		{
-			if (grid == null)
-			{
-				SxLog.Error("Invalid grid or token provided.");
-				yield break;
-			}
-
-			var anchor = grid.coord;
-			var arr = new SxGrid[8]; // LB, L, LT, T, RT, R, RB, B
-			var obj = default(SxGrid);
-			if (Board.TryGetGrid(anchor.x - 1, anchor.y + 1, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x - 1, anchor.y + 0, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x - 1, anchor.y - 1, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x + 0, anchor.y - 1, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x + 1, anchor.y - 1, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x + 1, anchor.y + 0, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x + 1, anchor.y + 1, out obj)) yield return obj;
-			if (Board.TryGetGrid(anchor.x + 0, anchor.y + 1, out obj)) yield return obj;
-		}
 	}
 }

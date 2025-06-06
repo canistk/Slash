@@ -247,11 +247,6 @@ namespace Slash.Core
                     throw new SxRuleException("Invalid move, reset state and return");
                 }
 
-				if (!logic.TryPlaceToken(grid, m_Turn))
-				{
-					throw new System.Exception($"Failed to place token({m_Turn}) on grid {grid.ReadableId}.");
-				}
-
 				logic.ExecuteMove(grid, token, data);
 			}
             catch (SxRuleException ex)
@@ -267,7 +262,7 @@ namespace Slash.Core
 
 
             // After executing the move, change the turn
-            SxLog.Info($"Valid move {grid.ReadableId}, End turn");
+            SxLog.Info($"Valid move {grid.ReadableId}, validate completed.");
 			// m_State = eGameState.WaitingForNPC;
 			m_State = eGameState.WaitingForInput;
 			EndTurn();
@@ -282,6 +277,7 @@ namespace Slash.Core
                 eTurn.Black => eTurn.White,
                 _ => throw new System.InvalidOperationException($"Invalid turn: {m_Turn}")
             };
+            SxLog.Info($"Turn switch to {m_Turn}");
         }
 
 
