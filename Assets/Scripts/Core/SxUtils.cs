@@ -151,5 +151,7 @@ namespace Slash.Core
 		public static bool operator !=(SxCoord a, SxCoord b) => !a.Equals(b);
 		public static SxCoord operator +(SxCoord a, SxCoord b) => new SxCoord(a.x + b.x, a.y + b.y);
 		public static SxCoord operator -(SxCoord a, SxCoord b) => new SxCoord(a.x - b.x, a.y - b.y);
+		public static SxCoord operator *(SxCoord a, int scalar) => new SxCoord(a.x * scalar, a.y * scalar);
+		public static SxCoord operator *(int scalar, SxCoord a) => new SxCoord(a.x * scalar, a.y * scalar);
 	}
 }
