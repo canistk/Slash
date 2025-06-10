@@ -41,7 +41,17 @@ namespace Slash.Core
 		}
 		public bool isBlack => !isWhite;
 
-        public static SxToken CreateWhite()
+		// Indicates if the token is a king (used in games like Checkers)
+		public bool isKing { get; set; } = false;
+		public void SetKing(SxLogicHandler handler, bool value)
+		{
+			if (handler is not SxCheckersLogicHandler)
+				throw new System.InvalidOperationException("Only Checkers logic handler can set king status.");
+			isKing = value;
+			TriggerUpdate();
+		}
+
+		public static SxToken CreateWhite()
         {
 			return new SxToken { m_Turn = eTurn.White };
         }
@@ -51,7 +61,14 @@ namespace Slash.Core
         }
         public override string ToString()
         {
-            return isWhite ? "White Token" : "Black Token";
+			var color = isWhite ? "White" : "Black";
+			var g = GetGrid();
+			if (g != null)
+			{
+				return $"{color} Token [{g.ReadableId}]";
+			}
+			// If the token is not linked to any grid, just return the color and type
+			return $"{color} Token [New]";
         }
 
 		private void TriggerUpdate()
