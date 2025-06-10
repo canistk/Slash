@@ -10,8 +10,9 @@ namespace Slash.Core
     {
         private SxGrid[,] m_Grids = null;
         private Dictionary<string, SxGrid> m_GridLookup = new Dictionary<string, SxGrid>();
+        private int[] m_Score; // 0 = white, 1 = black
 
-        public delegate void GridCreated(int x, int y, SxGrid grid);
+		public delegate void GridCreated(int x, int y, SxGrid grid);
         public SxBoard(int width, int height,
             GridCreated onCreated)
         {
@@ -22,7 +23,7 @@ namespace Slash.Core
             }
             m_Grids = new SxGrid[width, height];
             m_GridLookup = new Dictionary<string, SxGrid>(width * height);
-
+            m_Score = new int[2] { 0, 0 }; // Initialize scores for white and black
             // allocate grids
             for (int x = 0; x < width; x++)
             {
@@ -111,8 +112,62 @@ namespace Slash.Core
             return grid.HasToken();
         }
 
-        #region State & Rule
-        private eGameRule m_Rule;
+        public void SetScore(eTurn turn, int score)
+        {
+            if (turn == eTurn.White)
+            {
+                m_Score[0] = score;
+            }
+            else if (turn == eTurn.Black)
+            {
+                m_Score[1] = score;
+            }
+            else
+            {
+                SxLog.Error($"Invalid turn: {turn}. Cannot set score.");
+            }
+		}
+
+        public void AddScore(eTurn turn, int score)
+        {
+            if (turn == eTurn.White)
+            {
+                m_Score[0] += score;
+            }
+            else if (turn == eTurn.Black)
+            {
+                m_Score[1] += score;
+            }
+            else
+            {
+                SxLog.Error($"Invalid turn: {turn}. Cannot add score.");
+            }
+		}
+
+        public int GetScore(eTurn turn)
+        {
+            if (turn == eTurn.White)
+            {
+                return m_Score[0];
+            }
+            else if (turn == eTurn.Black)
+            {
+                return m_Score[1];
+            }
+            else
+            {
+                SxLog.Error($"Invalid turn: {turn}. Cannot get score.");
+                return 0;
+            }
+        }
+        public void ResetScores()
+        {
+            m_Score[0] = 0;
+            m_Score[1] = 0;
+		}
+
+		#region State & Rule
+		private eGameRule m_Rule;
         private eGameState m_State;
         private eTurn m_Turn;
         public eGameRule Rule => m_Rule;
