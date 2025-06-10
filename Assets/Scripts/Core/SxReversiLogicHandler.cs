@@ -146,9 +146,9 @@ namespace Slash.Core
 			}
 
 			// Assumeing the grid already has the target token placed.
-			if (!grid.HasToken() || grid.token != token)
+			if (grid.HasToken())
 			{
-				throw new System.Exception($"Grid {grid.ReadableId} does not have the token to place. Expected {token}, but found {grid.token}.");
+				throw new System.Exception($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
 			}
 
 			if (!TryPlaceToken(grid, token)) // Place the token on the grid
