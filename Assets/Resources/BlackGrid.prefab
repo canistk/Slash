@@ -70,8 +70,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Renderer: {fileID: 3330765887716948418}
   m_ClickVFX:
-    duration: 0.5
-    distance: 0.5
+    duration: 0.25
+    distance: 0.4
   m_Label: {fileID: 5007814372748273343}
 --- !u!1 &5876868363079057614
 GameObject:

@@ -61,7 +61,7 @@ namespace Slash.Core
                 x < 0 || x >= m_Grids.GetLength(0) ||
                 y < 0 || y >= m_Grids.GetLength(1))
             {
-                SxLog.Error($"Invalid grid coordinates: ({x}, {y}) out of ({m_Grids.GetLength(0)}, {m_Grids.GetLength(1)})");
+                // SxLog.Error($"Invalid grid coordinates: ({x}, {y}) out of ({m_Grids.GetLength(0)}, {m_Grids.GetLength(1)})");
                 grid = default;
                 return false;
             }
@@ -299,7 +299,7 @@ namespace Slash.Core
             {
 				if (!logic.IsValidMove(grid, token, out var data, throwError: true))
                 {
-                    throw new SxRuleException("Invalid move, reset state and return");
+                    throw new SxRuleException($"{logic.GetType()}, Invalid move, reset state and return");
                 }
 
 				logic.ExecuteMove(grid, token, data);
@@ -312,12 +312,12 @@ namespace Slash.Core
             catch (System.Exception ex)
             {
                 m_State = eGameState.WaitingForInput;
-                throw new System.Exception($"Error while validating move: {ex.Message}\n{ex.StackTrace}");
+                throw new System.Exception($"{logic.GetType()}, Error while validating move: {ex.Message}\n{ex.StackTrace}");
 			}
 
 
             // After executing the move, change the turn
-            SxLog.Info($"Valid move {grid.ReadableId}, validate completed.");
+            SxLog.Info($"{logic.GetType()} Valid move {grid.ReadableId}, validate completed.");
 			// m_State = eGameState.WaitingForNPC;
 			m_State = eGameState.WaitingForInput;
 			EndTurn();
@@ -326,13 +326,19 @@ namespace Slash.Core
         private void EndTurn()
         {
             // End the current turn and switch to the next turn
-            m_Turn = m_Turn switch
+            var org = m_Turn;
+			m_Turn = m_Turn switch
             {
                 eTurn.White => eTurn.Black,
                 eTurn.Black => eTurn.White,
                 _ => throw new System.InvalidOperationException($"Invalid turn: {m_Turn}")
             };
-            SxLog.Info($"Turn switch to {m_Turn}");
+            if (m_Turn == eTurn.None)
+            {
+                SxLog.Error($"Cannot end turn, turn is {org} -> {m_Turn}. Game might be over or not started.");
+                return;
+			}
+			SxLog.Info($"Turn switch to {m_Turn}");
         }
 
 

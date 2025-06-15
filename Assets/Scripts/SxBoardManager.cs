@@ -136,7 +136,6 @@ namespace Slash
 				throw new System.NullReferenceException();
 			
 			go.transform.SetLocalPositionAndRotation(pos, Quaternion.identity);
-			go.name		= $"Grid [{grid.ReadableId}] - {(isWhite?'W':'B')}";
 
 			var colliders = go.GetComponentsInChildren<Collider>();
 			if (m_ChessLayer == -1)
@@ -156,8 +155,8 @@ namespace Slash
 			if (!m_TokenMap.TryGetValue(token, out var uiToken))
 			{
 				uiToken = m_TokenPool.Get();
-				uiToken.Init(token);
 				m_TokenMap.Add(token, uiToken);
+				uiToken.Init(token);
 			}
 		}
 
@@ -173,15 +172,34 @@ namespace Slash
 				}
 			}
 			if (uiToken == null)
+			{
+				SxLog.Error("UIToken is null. Cannot release token UI.");
+				if (token != null)
+					SxLog.Error($"Token: {token}");
+				else
+					SxLog.Error("Token is null. Cannot release token UI.");
+				if (m_TokenMap.ContainsKey(token))
+					m_TokenMap.Remove(token);
+				else
+					SxLog.Error("Token not found in the map. Cannot remove it from the map.");
 				return;
+			}
 			m_TokenMap.Remove(token);
 			m_TokenPool.Release(uiToken);
 		}
 
 		private void EVENT_onTokenUpdated(SxToken token)
 		{
-			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+			if (token == null)
+			{
+				SxLog.Error("Token is null. Cannot update token UI.");
 				return;
+			}
+			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+			{
+				// common case: token is not spawned yet, first link called from grid/token cause loop
+				return;
+			}
 
 			// only updated whenever it's being found.
 			uiToken.Init(token);

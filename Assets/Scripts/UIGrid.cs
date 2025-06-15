@@ -34,6 +34,7 @@ namespace Slash
 			{
 				m_Label.text = data.ReadableId;
 			}
+			this.name = $"Grid [{grid.ReadableId}]";
 		}
 
 		public void HandleClick()
@@ -66,14 +67,23 @@ namespace Slash
 			var orgRot = m_OriginalRotation;
 			var tarPos = m_OriginalPosition + Vector3.down * m_ClickVFX.distance;
 
-			var pos = Vector3.Lerp(tarPos, orgPos, pt);
-			var rot = Vector3.Lerp(orgRot, orgRot + Vector3.right * 360f, pt);
 
-			if (pt < 1f)
+			if (pt < 0.5f)
 			{
-				transform.SetLocalPositionAndRotation(pos, Quaternion.Euler(rot));
+				var pos = Vector3.Lerp(orgPos, tarPos, pt * 2f);
+				transform.localPosition = pos;
+				// var rot = Vector3.Lerp(orgRot, orgRot + Vector3.right * 360f, pt);
+				// transform.SetLocalPositionAndRotation(pos, Quaternion.Euler(rot));
 			}
-			else
+			else if (pt <= 1f)
+			{
+				var pos = Vector3.Lerp(tarPos, orgPos, (pt - 0.5f) * 2f);
+				transform.localPosition = pos;
+				// transform.SetLocalPositionAndRotation(orgPos, Quaternion.Euler(orgRot));
+
+			}
+
+			if (pt >= 1f)
 			{
 				transform.SetLocalPositionAndRotation(orgPos, Quaternion.Euler(orgRot));
 				m_LastClick = default;

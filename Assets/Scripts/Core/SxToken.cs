@@ -37,18 +37,31 @@ namespace Slash.Core
 			private set
 			{
 				m_Turn = value ? eTurn.White : eTurn.Black;
+				TriggerUpdate();
 			}
 		}
 		public bool isBlack => !isWhite;
 
 		// Indicates if the token is a king (used in games like Checkers)
-		public bool isKing { get; set; } = false;
+		private bool m_IsKing = false;
+		public bool isKing
+		{
+			get => m_IsKing;
+			private set
+			{
+				if (m_IsKing == value)
+					return; // No change needed
+				m_IsKing = value;
+				TriggerUpdate();
+			}
+		}
 		public void SetKing(SxLogicHandler handler, bool value)
 		{
 			if (handler is not SxCheckersLogicHandler)
 				throw new System.InvalidOperationException("Only Checkers logic handler can set king status.");
+			if (isKing == value)
+				return; // No change needed
 			isKing = value;
-			TriggerUpdate();
 		}
 
 		public static SxToken CreateWhite()
@@ -86,7 +99,6 @@ namespace Slash.Core
         public void Flip()
         {
             isWhite = !isWhite;
-			TriggerUpdate();
 		}
 
 		private SxGrid m_Grid = null;

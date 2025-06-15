@@ -156,6 +156,8 @@ namespace Slash.Core
 				throw new System.Exception($"Failed to place token({token.GetTurn()}) on grid {grid.ReadableId}.");
 			}
 
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine($"Flipped tokens : {flipList.Count}");
 			for (int i = 0; i < flipList.Count; i++)
 			{
 				var flipGrid = flipList[i];
@@ -169,9 +171,11 @@ namespace Slash.Core
 					SxLog.Error($"flip grid {flipGrid.ReadableId} does not have a token to flip. This should not happen.");
 					continue;
 				}
-
+				sb.Append($"{flipGrid.ReadableId} from {flipGrid.token} -> ");
 				flipGrid.token.Flip();
+				sb.AppendLine($"{flipGrid.token}");
 			}
+			SxLog.Info($"Result, Place {grid.ReadableId} with token {token.GetTurn()}.\n{sb.ToString()}");
 		}
 
 		private bool CanFlip(SxGrid anchor, SxToken token, SxCoord dir, out List<SxGrid> flipList)

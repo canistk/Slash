@@ -2,12 +2,37 @@ using Slash.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI.Table;
 namespace Slash
 {
     public class UIToken : UI3DRenderer
 	{
 		private SxToken data;
+
+		private void Awake()
+		{
+			SxToken.EVENT_Updated += SxToken_EVENT_Updated;
+			SxToken.EVENT_Linked += SxToken_EVENT_Linked;
+		}
+
+		private void SxToken_EVENT_Linked(SxGrid grid, SxToken token)
+		{
+			
+		}
+
+		private void SxToken_EVENT_Updated(SxToken obj)
+		{
+			if (data == null || obj != data)
+				return;
+			var grid = data.GetGrid();
+			if (grid != null && grid.UI is UIGrid gridUI)
+			{
+				MoveTo(gridUI);
+			}
+			UpdateColor();
+		}
 
 		public void Init(SxToken token)
 		{
@@ -19,18 +44,57 @@ namespace Slash
 			var grid = this.data.GetGrid();
 			if (grid != null && grid.UI is UIGrid gridUI)
 			{
-				pos = gridUI.transform.position + (Vector3.up * 0.5f);
+				MoveTo(gridUI);
 			}
 
-			var rot = token.isWhite ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(180f, 0f, 0f);
-			transform.SetPositionAndRotation(pos, rot);
+			UpdateColor(true);
 		}
 
-		[System.Obsolete]
-		public void SetColor(Color color)
+		private void MoveTo(UIGrid gridUI)
 		{
-			mpb.SetColor("_Color", color);
-			Apply();
+			if (gridUI == null)
+				return;
+
+			transform.SetParent(gridUI.transform, false);
+			var pos = gridUI.transform.position + (Vector3.up * 0.5f);
+			transform.position = pos;
 		}
+
+		private bool m_UpdateColor = false;
+		private void FixedUpdate()
+		{
+			// SetColor with rotation animation
+			if (!m_UpdateColor)
+				return;
+
+			if (data == null)
+				return;
+			var finalRot = data.isWhite ? Quaternion.identity : Quaternion.Euler(180f, 0f, 0f);
+			if (transform.rotation != finalRot)
+			{
+				transform.rotation = Quaternion.RotateTowards(transform.rotation, finalRot, Time.fixedDeltaTime);
+			}
+			else
+			{
+				UpdateColor(true);
+			}
+		}
+
+		private void UpdateColor(bool force = false)
+		{
+			if (data == null)
+				return;
+
+			if (force)
+			{
+				var rot = data.isWhite ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(180f, 0f, 0f);
+				transform.rotation = rot;
+				m_UpdateColor = false;
+				return;
+			}
+			this.name = $"Token [{(data.isWhite ? "White" : "Black")}])";
+			m_UpdateColor = true;
+		}
+
 	}
 }
