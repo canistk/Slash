@@ -89,7 +89,7 @@ namespace Slash
 		[ContextMenu("Init by Setting")]
 		public void InitBySetting()
 		{
-			Init(m_Width, m_Height, eGameRule.Gobang);
+			Init(m_Width, m_Height, eGameRule.Checkers);
 		}
 
 		public void Init(int width, int height, eGameRule rule)
@@ -213,6 +213,44 @@ namespace Slash
 		[SerializeField] QueryTriggerInteraction m_Qti = QueryTriggerInteraction.UseGlobal;
 		[SerializeField] int m_HitBuffer = 20;
 		private RaycastHit[] m_Hits = null;
+		
+		public class LastRaycastHit
+		{
+			public bool valid;
+			public RaycastHit ray;
+			public float distance;
+			public SxGrid grid;
+			public SxToken token;
+		}
+		private LastRaycastHit m_LastHit;
+		public LastRaycastHit lastHit => m_LastHit;
+
+		public bool TryGetRaycast(out RaycastHit raycastHit, out UIGrid gridUI)
+		{
+			raycastHit = default;
+			gridUI = null;
+			var cam = Camera.main;
+			if (cam == null)
+				return false;
+			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+			Debug.DrawLine(ray.origin, ray.origin + ray.direction * m_Distance, Color.red, 5f);
+			var hitCnt = Physics.RaycastNonAlloc(ray, m_Hits, m_Distance, m_LayerMask, m_Qti);
+			if (hitCnt == 0)
+				return false; // hit nothing
+			var iter = m_Hits
+				.Take(hitCnt)
+				.Where(o => o.collider != null)
+				.OrderBy(o => o.distance);
+			foreach (var hit in iter)
+			{
+				raycastHit = hit;
+				gridUI = hit.collider.gameObject.GetComponent<UIGrid>();
+				return true;
+			}
+
+			return false; // no valid hit found
+		}
+
 		public void HandleRaycast()
 		{
 			var cam = Camera.main;
@@ -244,6 +282,15 @@ namespace Slash
 					SxLog.Warning("Raycast hit a collider without UIGrid component.");
 					continue;
 				}
+
+				m_LastHit = new LastRaycastHit
+				{
+					valid = true,
+					ray = obj,
+					distance = obj.distance,
+					grid = grid.data,
+					token = grid.data.token,
+				};
 
 				try
 				{

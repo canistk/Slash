@@ -16,6 +16,13 @@ namespace Slash
 		{
 			SxToken.EVENT_Updated += SxToken_EVENT_Updated;
 			SxToken.EVENT_Linked += SxToken_EVENT_Linked;
+			SxBoard.EVENT_GameRuleChanged += SxBoard_EVENT_GameRuleChanged;
+		}
+
+		private void SxBoard_EVENT_GameRuleChanged(eGameRule rule)
+		{
+			if (rule == eGameRule.Checkers)
+			{ }
 		}
 
 		private void SxToken_EVENT_Linked(SxGrid grid, SxToken token)
@@ -62,19 +69,45 @@ namespace Slash
 		private void FixedUpdate()
 		{
 			// SetColor with rotation animation
-			if (!m_UpdateColor)
-				return;
-
 			if (data == null)
 				return;
-			var finalRot = data.isWhite ? Quaternion.identity : Quaternion.Euler(180f, 0f, 0f);
-			if (transform.rotation != finalRot)
+
+
+			if (m_UpdateColor)
 			{
-				transform.rotation = Quaternion.RotateTowards(transform.rotation, finalRot, 5f * 360f * Time.fixedDeltaTime);
+				var finalRot = data.isWhite ? Quaternion.identity : Quaternion.Euler(180f, 0f, 0f);
+				if (transform.rotation != finalRot)
+				{
+					transform.rotation = Quaternion.RotateTowards(transform.rotation, finalRot, 5f * 360f * Time.fixedDeltaTime);
+				}
+				else
+				{
+					UpdateColor(true);
+				}
 			}
-			else
+
+			if (SxBoardManager.Instance != null &&
+				SxBoardManager.Instance.board.Rule == eGameRule.Checkers)
 			{
-				UpdateColor(true);
+				if (SxBoardManager.Instance.board.TryGetLogicHandler(out var h) &&
+					h is SxCheckersLogicHandler handler &&
+					handler.picked == data)
+				{
+					if (SxBoardManager.Instance.TryGetRaycast(out var hit, out _))
+					{
+						var pos = hit.point + (Vector3.up * 0.5f);
+						transform.position = pos;
+					}
+					else
+					{
+						SxLog.Error("UIToken: No raycast hit detected while moving token. Using parent position instead.");
+					}
+				}
+				else
+				{
+					var pos = transform.parent.position + (Vector3.up * 0.5f);
+					transform.position = pos;
+				}
 			}
 		}
 

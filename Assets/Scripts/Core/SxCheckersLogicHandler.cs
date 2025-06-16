@@ -79,6 +79,15 @@ namespace Slash.Core
 			public SxGrid eatGrid; // The grid where the opponent's token is eaten
 		}
 
+		KeyValuePair<bool, SxToken> m_Picked = default;
+		public SxToken picked
+		{
+			get
+			{
+				return m_Picked.Key ? m_Picked.Value : null;
+			}
+		}
+
 		public override bool IsValidMove(SxGrid grid, SxToken token, out object data, bool throwError = false)
 		{
 			// Check if the grid and token are valid
@@ -92,6 +101,37 @@ namespace Slash.Core
 			}
 
 			data = null;
+			// in checkers, we can only move existing tokens, not place new ones
+			token = null;
+			if (!m_Picked.Key)
+			{
+				if (grid.HasToken())
+				{
+					// Pick up the token from the grid
+					token = grid.token;
+					m_Picked = new KeyValuePair<bool, SxToken>(true, token);
+					return false; // We are picking up the token, not placing it
+				}
+				else
+				{
+					return _RuleError($"Grid {grid.ReadableId} does not have a token to move.");
+				}
+			}
+			else
+			{
+				// We already have a token picked, trying to place it on the grid
+				if (grid.HasToken())
+				{
+					return _RuleError($"Grid {grid.ReadableId} already has a token. Cannot place {token} there.");
+				}
+				else
+				{
+					// We are trying to place the picked token on the grid
+					token = m_Picked.Value;
+				}
+			}
+
+			m_Picked = default; // Reset the picked token after processing
 			if (grid == null || token == null)
 			{
 				return _RuleError("Invalid grid or token provided.");

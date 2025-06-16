@@ -200,6 +200,7 @@ namespace Slash.Core
 					SxLog.Error($"Unsupported game rule: {Rule}");
                     break;
 				}
+                EVENT_GameRuleChanged?.Invoke(value);
 			}
         }
         public eGameState State => m_State;
@@ -241,7 +242,7 @@ namespace Slash.Core
 
         // 0 = Reversi, 1 = Gobang, 2 = Checkers
         private SxLogicHandler[] m_Logics = new SxLogicHandler[3];
-		private bool TryGetLogicHandler(out SxLogicHandler logic)
+		public bool TryGetLogicHandler(out SxLogicHandler logic)
         {
 			logic = m_Logics[(int)Rule - 1];
 			return logic != null;
@@ -276,7 +277,7 @@ namespace Slash.Core
         #endregion State & Rule
 
         #region Events
-        public event System.Action<eGameRule> EVENT_GameRuleChanged;
+        public static event System.Action<eGameRule> EVENT_GameRuleChanged;
         public delegate void BoardCreated(SxBoard board);
         #endregion Events
 
