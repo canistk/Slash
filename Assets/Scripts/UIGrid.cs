@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Unity.Collections;
 namespace Slash
 {
     public class UIGrid : UI3DRenderer
@@ -15,7 +16,8 @@ namespace Slash
 		}
 		[SerializeField] private ClickVFX m_ClickVFX = new();
 		[SerializeField] TMP_Text m_Label = null;
-		public SxGrid data { get; private set; } = null;
+		
+		public SxGrid data = null;
 
 		private Vector3 m_OriginalPosition;
 		private Vector3 m_OriginalRotation;

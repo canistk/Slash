@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Slash.Core
 {
+    [System.Serializable]
 	public class SxGrid
     {
         public SxToken token { get; private set; } = null;

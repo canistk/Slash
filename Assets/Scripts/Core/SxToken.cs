@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 namespace Slash.Core
 {
-    public class SxToken : System.IDisposable
+	[System.Serializable]
+	public class SxToken : System.IDisposable
 	{
 		public static event LinkTokenEvent EVENT_Linked, EVENT_Unlinked;
 		public static event System.Action<SxToken> EVENT_Disposed;
 		public static event System.Action<SxToken> EVENT_Updated;
 
+		[UnityEngine.SerializeField]
 		private eTurn m_Turn;
 		private bool isDisposed;
 		public object UI { get; set; } // For UI data binding, can be used to store any additional data needed for UI representation
@@ -146,8 +148,9 @@ namespace Slash.Core
 						EVENT_Disposed.Invoke(this);
 				}
 
-				EVENT_Updated = null;
-				EVENT_Disposed = null;
+				// Shouldn't clear the static event.
+				//EVENT_Updated = null;
+				//EVENT_Disposed = null;
 				isDisposed = true;
 			}
 		}

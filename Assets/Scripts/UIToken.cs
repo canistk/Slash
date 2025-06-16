@@ -2,14 +2,15 @@ using Slash.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting.Antlr3.Runtime;
+using Unity.Collections;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI.Table;
 namespace Slash
 {
     public class UIToken : UI3DRenderer
 	{
 		private SxToken data;
+		[SerializeField]
+		private bool m_UpdateColor = false;
 
 		private void Awake()
 		{
@@ -22,10 +23,11 @@ namespace Slash
 			
 		}
 
-		private void SxToken_EVENT_Updated(SxToken obj)
+		private void SxToken_EVENT_Updated(SxToken _)
 		{
-			if (data == null || obj != data)
-				return;
+			//if (data == null || obj != data)
+			//	return;
+			gameObject.name = $"Token [{(data.isWhite ? "White" : "Black")}]";
 			var grid = data.GetGrid();
 			if (grid != null && grid.UI is UIGrid gridUI)
 			{
@@ -38,8 +40,6 @@ namespace Slash
 		{
 			this.data = token;
 			this.data.UI = this;
-
-			var pos = transform.position;
 
 			var grid = this.data.GetGrid();
 			if (grid != null && grid.UI is UIGrid gridUI)
@@ -59,8 +59,6 @@ namespace Slash
 			var pos = gridUI.transform.position + (Vector3.up * 0.5f);
 			transform.position = pos;
 		}
-
-		private bool m_UpdateColor = false;
 		private void FixedUpdate()
 		{
 			// SetColor with rotation animation
@@ -72,7 +70,7 @@ namespace Slash
 			var finalRot = data.isWhite ? Quaternion.identity : Quaternion.Euler(180f, 0f, 0f);
 			if (transform.rotation != finalRot)
 			{
-				transform.rotation = Quaternion.RotateTowards(transform.rotation, finalRot, Time.fixedDeltaTime);
+				transform.rotation = Quaternion.RotateTowards(transform.rotation, finalRot, 5f * 360f * Time.fixedDeltaTime);
 			}
 			else
 			{
@@ -92,7 +90,6 @@ namespace Slash
 				m_UpdateColor = false;
 				return;
 			}
-			this.name = $"Token [{(data.isWhite ? "White" : "Black")}])";
 			m_UpdateColor = true;
 		}
 

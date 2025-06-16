@@ -135,7 +135,7 @@ namespace Slash
 			if (uiGrid == null)
 				throw new System.NullReferenceException();
 			
-			go.transform.SetLocalPositionAndRotation(pos, Quaternion.identity);
+			go.transform.SetPositionAndRotation(pos, Quaternion.identity);
 
 			var colliders = go.GetComponentsInChildren<Collider>();
 			if (m_ChessLayer == -1)
@@ -155,8 +155,8 @@ namespace Slash
 			if (!m_TokenMap.TryGetValue(token, out var uiToken))
 			{
 				uiToken = m_TokenPool.Get();
-				m_TokenMap.Add(token, uiToken);
 				uiToken.Init(token);
+				m_TokenMap.Add(token, uiToken);
 			}
 		}
 
@@ -202,7 +202,7 @@ namespace Slash
 			}
 
 			// only updated whenever it's being found.
-			uiToken.Init(token);
+			
 		}
 
 		#region Handle Click
