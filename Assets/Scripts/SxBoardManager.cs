@@ -84,6 +84,7 @@ namespace Slash
 		}
 
 		private SxBoard m_Board = null;
+		public SxBoard board => m_Board;
 
 		[ContextMenu("Init by Setting")]
 		public void InitBySetting()
