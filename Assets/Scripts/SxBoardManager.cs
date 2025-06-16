@@ -153,6 +153,8 @@ namespace Slash
 		Dictionary<SxToken, UIToken> m_TokenMap = new Dictionary<SxToken, UIToken>();
 		private void OnSpawnToken(SxGrid grid, SxToken token)
 		{
+			if (m_TokenMap.ContainsKey(token))
+				return;
 			if (!m_TokenMap.TryGetValue(token, out var uiToken))
 			{
 				uiToken = m_TokenPool.Get();
@@ -222,11 +224,15 @@ namespace Slash
 			public SxGrid grid;
 			public SxToken token;
 		}
-		private LastRaycastHit m_LastHit;
-		public LastRaycastHit lastHit => m_LastHit;
+		private LastRaycastHit m_LastClick;
+		public LastRaycastHit lastClick => m_LastClick;
 
 		public bool TryGetRaycast(out RaycastHit raycastHit, out UIGrid gridUI)
 		{
+			if (m_Hits == null || m_Hits.Length != m_HitBuffer)
+			{
+				m_Hits = new RaycastHit[m_HitBuffer];
+			}
 			raycastHit = default;
 			gridUI = null;
 			var cam = Camera.main;
@@ -244,7 +250,7 @@ namespace Slash
 			foreach (var hit in iter)
 			{
 				raycastHit = hit;
-				gridUI = hit.collider.gameObject.GetComponent<UIGrid>();
+				gridUI = hit.collider?.gameObject.GetComponent<UIGrid>();
 				return true;
 			}
 
@@ -261,65 +267,51 @@ namespace Slash
 			if (!m_Board.IsWaitingForPlayer)
 				return;
 
-			if (m_Hits == null || m_Hits.Length != m_HitBuffer)
+			if (!TryGetRaycast(out RaycastHit raycastHit, out UIGrid grid))
+				return;
+
+			if (grid == null)
 			{
-				m_Hits = new RaycastHit[m_HitBuffer];
+				SxLog.Warning("Raycast hit a collider without UIGrid component.");
+				return; // no valid hit found
 			}
-			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-			Debug.DrawLine(ray.origin, ray.origin + ray.direction * m_Distance, Color.red, 5f);
-			var hitCnt = Physics.RaycastNonAlloc(ray, m_Hits, m_Distance, m_LayerMask, m_Qti);
-			if (hitCnt == 0)
-				return; // hit nothing
-			var iter = m_Hits
-				.Take(hitCnt)
-				.Where(o => o.collider != null)
-				.OrderBy(o => o.distance);
-			foreach (var obj in iter)
+
+			m_LastClick = new LastRaycastHit
 			{
-				var grid = obj.collider.gameObject.GetComponent<UIGrid>();
-				if (grid == null)
-				{
-					SxLog.Warning("Raycast hit a collider without UIGrid component.");
-					continue;
-				}
+				valid = true,
+				ray = raycastHit,
+				distance = raycastHit.distance,
+				grid = grid.data,
+				token = grid.data.token,
+			};
 
-				m_LastHit = new LastRaycastHit
-				{
-					valid = true,
-					ray = obj,
-					distance = obj.distance,
-					grid = grid.data,
-					token = grid.data.token,
-				};
-
+			try
+			{
+				var id = grid?.data == null ? "null" : grid.data.ReadableId;
+				SxLog.Info($"Clicked on grid at position {id}{grid.data.coord}", grid);
 				try
 				{
-					var id = grid?.data == null ? "null" : grid.data.ReadableId;
-					SxLog.Info($"Clicked on grid at position {id}{grid.data.coord}", grid);
-					try
-					{
-						m_Board.ApplyPlayerSelection(grid.data);
+					m_Board.ApplyPlayerSelection(grid.data);
 
-						// accept the click and handle the UI animation
-						grid.HandleClick(); // UI animation
-						return; // only handle the first hit
-					}
-					catch (SxRuleException ex)
-					{
-						SxLog.Warning($"{ex.Message}");
-						return; // skip to the next hit
-					}
-					catch (System.Exception ex)
-					{
-						throw ex;
-					}
-
+					// accept the click and handle the UI animation
+					grid.HandleClick(); // UI animation
+					return; // only handle the first hit
+				}
+				catch (SxRuleException ex)
+				{
+					SxLog.Warning($"{ex.Message}");
+					return; // skip to the next hit
 				}
 				catch (System.Exception ex)
 				{
-					SxLog.Error($"Unknown Error handling click on grid: {ex.Message}");
-					continue;
+					throw ex;
 				}
+
+			}
+			catch (System.Exception ex)
+			{
+				SxLog.Error($"Unknown Error handling click on grid: {ex.Message}");
+				return;
 			}
 		}
 		#endregion Handle Click

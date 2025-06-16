@@ -1,13 +1,43 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 namespace Slash.Core
 {
 	[System.Serializable]
-	public class SxToken : System.IDisposable
+	public class SxToken : System.IDisposable, IEquatable<SxToken>
 	{
+		public bool Equals(SxToken other)
+		{
+			if (other == null) return false;
+			return m_Id.Equals(other.m_Id);
+		}
+		public override bool Equals(object obj)
+		{
+			if (obj is SxToken token)
+				return Equals(token);
+			return false;
+		}
+		public override int GetHashCode()
+		{
+			return m_Id.GetHashCode();
+		}
+		public static bool operator ==(SxToken left, SxToken right)
+		{
+			if (ReferenceEquals(left, right)) return true;
+			if (left is null || right is null) return false;
+			return left.Equals(right);
+		}
+		public static bool operator !=(SxToken left, SxToken right)
+		{
+			return !(left == right);
+		}
+
 		public static event LinkTokenEvent EVENT_Linked, EVENT_Unlinked;
 		public static event System.Action<SxToken> EVENT_Disposed;
 		public static event System.Action<SxToken> EVENT_Updated;
+
+		private System.Guid m_Id;
+		public System.Guid Id => m_Id;
 
 		[UnityEngine.SerializeField]
 		private eTurn m_Turn;
@@ -68,11 +98,19 @@ namespace Slash.Core
 
 		public static SxToken CreateWhite()
         {
-			return new SxToken { m_Turn = eTurn.White };
+			return new SxToken
+			{
+				m_Id = System.Guid.NewGuid(),
+				m_Turn = eTurn.White
+			};
         }
         public static SxToken CreateBlack()
         {
-            return new SxToken { m_Turn = eTurn.Black };
+            return new SxToken
+			{
+				m_Id = System.Guid.NewGuid(),
+				m_Turn = eTurn.Black
+			};
         }
         public override string ToString()
         {

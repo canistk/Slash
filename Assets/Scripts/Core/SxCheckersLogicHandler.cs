@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 namespace Slash.Core
 {
 	/// <summary>
@@ -70,7 +69,7 @@ namespace Slash.Core
 
 		public class NormalMoveInfo
 		{
-			public SxGrid grid;
+			public SxGrid from, to;
 			public SxToken token;
 		}
 
@@ -85,6 +84,19 @@ namespace Slash.Core
 			get
 			{
 				return m_Picked.Key ? m_Picked.Value : null;
+			}
+		}
+
+		private class MoveRequest
+		{
+			SxToken token;
+			SxGrid from;
+			SxGrid to;
+			public MoveRequest(SxToken token, SxGrid from, SxGrid to)
+			{
+				this.token = token;
+				this.from = from;
+				this.to = to;
 			}
 		}
 
@@ -107,10 +119,17 @@ namespace Slash.Core
 			{
 				if (grid.HasToken())
 				{
-					// Pick up the token from the grid
-					token = grid.token;
-					m_Picked = new KeyValuePair<bool, SxToken>(true, token);
-					return false; // We are picking up the token, not placing it
+					if (grid.token.GetTurn() == Board.Turn)
+					{
+						// Pick up the token from the grid
+						token = grid.token;
+						m_Picked = new KeyValuePair<bool, SxToken>(true, token);
+						return false; // We are picking up the token, not placing it
+					}
+					else
+					{
+						return _RuleError($"Grid {grid.ReadableId} has a token from the opponent. Cannot pick it up.");
+					}
 				}
 				else
 				{
@@ -167,6 +186,11 @@ namespace Slash.Core
 			var v = grid.coord - token.GetGrid().coord;
 			var absMatched = System.Math.Abs(v.x) == System.Math.Abs(v.y);
 			var moveFwd = v.y > 0;
+
+			var from = token.GetGrid();
+			var to = grid;
+			// SxLog.Info($"checking move : token from {from.ReadableId} to {to.ReadableId}");
+
 			if (System.Math.Abs(v.x) == 1 && absMatched)
 			{
 				// normal move, one square diagonally forward
@@ -179,7 +203,8 @@ namespace Slash.Core
 				// Valid move, one square diagonally forward
 				data = new NormalMoveInfo
 				{
-					grid = grid,
+					from = from,
+					to = to,
 					token = token,
 				};
 				return true;
@@ -211,7 +236,8 @@ namespace Slash.Core
 				// Valid move, one square diagonally forward
 				data = new JumpMoveInfo
 				{
-					grid = grid,
+					from = from,
+					to = to,
 					token = token,
 					eatGrid = eatGrid
 				};
@@ -242,6 +268,12 @@ namespace Slash.Core
 
 				jumpMoveInfo.eatGrid.token.Dispose();
 				Board.AddScore(token.GetTurn(), 1);
+				SxLog.Info($"Move {jumpMoveInfo.token}, from {jumpMoveInfo.from.ReadableId} to {jumpMoveInfo.to.ReadableId}, eat = {jumpMoveInfo.eatGrid.ReadableId}");
+			}
+			else
+			{
+				SxLog.Info($"Move {normalMoveInfo.token}, from {normalMoveInfo.from.ReadableId} to {normalMoveInfo.to.ReadableId}");
+				token.Link(normalMoveInfo.to);
 			}
 		}
 

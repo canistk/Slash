@@ -89,6 +89,10 @@ namespace Slash.Core
 			EVENT_Updated?.Invoke(this);
 		}
 
+		public override string ToString()
+		{
+            return ReadableId;
+		}
 	}
 	public delegate void LinkTokenEvent(SxGrid grid, SxToken token);
 
