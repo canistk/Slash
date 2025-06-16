@@ -12,6 +12,9 @@ namespace Slash.Core
         private Dictionary<string, SxGrid> m_GridLookup = new Dictionary<string, SxGrid>();
         private int[] m_Score; // 0 = white, 1 = black
 
+        public int Width => m_Grids?.GetLength(0) ?? 0;
+        public int Height => m_Grids?.GetLength(1) ?? 0;
+
 		public delegate void GridCreated(int x, int y, SxGrid grid);
         public SxBoard(int width, int height,
             GridCreated onCreated)
@@ -167,10 +170,38 @@ namespace Slash.Core
 		}
 
 		#region State & Rule
-		private eGameRule m_Rule;
         private eGameState m_State;
         private eTurn m_Turn;
-        public eGameRule Rule => m_Rule;
+		private eGameRule m_Rule;
+        public eGameRule Rule
+        {
+            get => m_Rule;
+            private set
+            {
+                if (m_Rule == value)
+                    return;
+
+                m_Rule = value;
+				switch (value)
+				{
+					case eGameRule.Reversi:
+					if (m_Logics[0] == null)
+						m_Logics[0] = new SxReversiLogicHandler(this);
+					break;
+					case eGameRule.Gobang:
+					if (m_Logics[1] == null)
+						m_Logics[1] = new SxGobangLogicHandler(this);
+					break;
+					case eGameRule.Checkers:
+					if (m_Logics[2] == null)
+						m_Logics[2] = new SxCheckersLogicHandler(this);
+					break;
+					default:
+					SxLog.Error($"Unsupported game rule: {Rule}");
+                    break;
+				}
+			}
+        }
         public eGameState State => m_State;
         public eTurn Turn => m_Turn;
 
@@ -182,12 +213,12 @@ namespace Slash.Core
                 return;
             }
             m_State = eGameState.InitBoard;
-            m_Rule = rule;
             m_Turn = turn;
-            if (!TryGetLogicHandler(out var logic))
-            {
-                SxLog.Error($"Failed to get logic handler for rule: {rule}");
-            }
+            Rule = rule;
+            //if (!TryChangeMode(rule))
+            //{
+            //    SxLog.Error($"Failed to get logic handler for rule: {rule}");
+            //}
 			// m_State = eGameState.SolveConflict;
 			m_State = eGameState.WaitingForInput;
 		}
@@ -212,44 +243,28 @@ namespace Slash.Core
         private SxLogicHandler[] m_Logics = new SxLogicHandler[3];
 		private bool TryGetLogicHandler(out SxLogicHandler logic)
         {
-            logic = default;
-            switch (m_Rule)
-            {
-                case eGameRule.Reversi:
-                if (m_Logics[0] == null)
-                    m_Logics[0] = new SxReversiLogicHandler(this);
-				logic = m_Logics[0];
-                break;
-                case eGameRule.Gobang:
-                //logic = new SxGobangLogicHandler();
-                break;
-                case eGameRule.Checkers:
-                //logic = new SxCheckersLogicHandler();
-                break;
-                default:
-                SxLog.Error($"Unsupported game rule: {m_Rule}");
-                return false;
-            }
-            return logic != null;
+			logic = m_Logics[(int)Rule - 1];
+			return logic != null;
         }
 
         public bool TryChangeMode(eGameRule rule)
         {
             if (m_State <= eGameState.InitBoard)
             {
-                SxLog.Error($"Cannot change game rule from {m_Rule} to {rule}. call Init() instead.");
+                SxLog.Error($"Cannot change game rule from {Rule} to {rule}. call Init() instead.");
                 return false;
             }
             if (m_State == eGameState.ValidatingMove)
             {
-                SxLog.Error($"Cannot change game rule from {m_Rule} to {rule}. Game is currently validating a move.");
+                SxLog.Error($"Cannot change game rule from {Rule} to {rule}. Game is currently validating a move.");
                 return false;
             }
 
-            m_Rule = rule;
+            this.Rule = rule;
             if (TryGetLogicHandler(out var logic))
             {
                 logic.ChangeMode(this);
+                logic.SolveConflict();
             }
             else
             {
@@ -284,7 +299,7 @@ namespace Slash.Core
 
 			if (!TryGetLogicHandler(out var logic))
             {
-                throw new System.InvalidOperationException($"No logic handler found for rule: {m_Rule}");
+                throw new System.InvalidOperationException($"No logic handler found for rule: {Rule}");
             }
 
             var token = m_Turn switch

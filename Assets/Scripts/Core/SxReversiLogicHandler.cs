@@ -38,7 +38,25 @@ namespace Slash.Core
 
 		public override void SolveConflict()
 		{
+			if (Board == null)
+			{
+				SxLog.Error("Board cannot be null.");
+				return;
+			}
+
 			Board.ChangeState(this, eGameState.SolveConflict);
+			// Prepare for change mode, resolve rule's conflicts, ensure the board is ready for the next step
+			// the existing board state may not be valid for Reversi rules
+			for (int x = 0; x < Board.Width; ++x)
+			{
+				for (int y = 0; y < Board.Height; ++y)
+				{
+					if (!Board.TryGetGrid(x, y, out var grid))
+						continue;
+					if (!grid.HasToken())
+						continue;
+				}
+			}
 
 			Board.ChangeState(this, eGameState.WaitingForInput);
 			throw new System.NotImplementedException();
