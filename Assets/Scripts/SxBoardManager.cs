@@ -89,7 +89,7 @@ namespace Slash
 		[ContextMenu("Init by Setting")]
 		public void InitBySetting()
 		{
-			Init(m_Width, m_Height, eGameRule.Reversi);
+			Init(m_Width, m_Height, eGameRule.Gobang);
 		}
 
 		public void Init(int width, int height, eGameRule rule)
