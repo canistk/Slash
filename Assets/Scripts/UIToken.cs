@@ -11,6 +11,8 @@ namespace Slash
 		private SxToken data;
 		[SerializeField]
 		private bool m_UpdateColor = false;
+		[SerializeField]
+		private GameObject[] m_KingUIs = { };
 
 		private void Awake()
 		{
@@ -41,6 +43,16 @@ namespace Slash
 				MoveTo(gridUI);
 			}
 			UpdateColor();
+
+			if (m_KingUIs != null && m_KingUIs.Length > 0)
+			{
+				foreach (var go in m_KingUIs)
+				{
+					if (go == null)
+						continue;
+					go.SetActive(data.isKing);
+				}
+			}
 		}
 
 		public void Init(SxToken token)

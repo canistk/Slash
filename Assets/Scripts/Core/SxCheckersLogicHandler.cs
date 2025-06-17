@@ -251,30 +251,50 @@ namespace Slash.Core
 
 		public override void ExecuteMove(SxGrid grid, object data)
 		{
-			if (data is not NormalMoveInfo normalMoveInfo)
+			if (data is not NormalMoveInfo move)
 			{
 				SxLog.Error("Invalid data for normal move execution.");
 				return;
 			}
 
-			if (data is JumpMoveInfo jumpMoveInfo)
+			if (data is JumpMoveInfo jump)
 			{
 				// Remove the eaten token
-				if (jumpMoveInfo.eatGrid == null || !jumpMoveInfo.eatGrid.HasToken())
+				if (jump.eatGrid == null || !jump.eatGrid.HasToken())
 				{
 					SxLog.Error("Invalid jump move execution: eatGrid is null or does not have a token.");
 					return;
 				}
 
-				jumpMoveInfo.token.Link(jumpMoveInfo.to);
-				jumpMoveInfo.eatGrid.token.Dispose();
-				Board.AddScore(jumpMoveInfo.token.GetTurn(), 1);
-				SxLog.Info($"Move {jumpMoveInfo.token}, from {jumpMoveInfo.from.ReadableId} to {jumpMoveInfo.to.ReadableId}, eat = {jumpMoveInfo.eatGrid.ReadableId}");
+				jump.token.Link(jump.to);
+				jump.eatGrid.token.Dispose();
+				Board.AddScore(jump.token.GetTurn(), 1);
+				SxLog.Info($"Move {jump.token}, from {jump.from.ReadableId} to {jump.to.ReadableId}, eat = {jump.eatGrid.ReadableId}");
+				CheckReachBaseLine(jump.token, jump.to);
 			}
 			else
 			{
-				normalMoveInfo.token.Link(normalMoveInfo.to);
-				SxLog.Info($"Move {normalMoveInfo.token}, from {normalMoveInfo.from.ReadableId} to {normalMoveInfo.to.ReadableId}");
+				move.token.Link(move.to);
+				SxLog.Info($"Move {move.token}, from {move.from.ReadableId} to {move.to.ReadableId}");
+				CheckReachBaseLine(move.token, move.to);
+			}
+
+			void CheckReachBaseLine(SxToken token, SxGrid grid)
+			{
+				var turn = token.GetTurn();
+				var coord = grid.coord;
+				var id = coord.ReadableId;
+				// Check if token reach the end of the board to become a king
+				if (coord.x == 0 && turn == eTurn.White)
+				{
+					token.SetKing(this, true);
+					SxLog.Info($"Token {token} became a king at {id}");
+				}
+				else if (coord.x == 7 && turn == eTurn.Black)
+				{
+					token.SetKing(this, true);
+					SxLog.Info($"Token {token} became a king at {id}");
+				}
 			}
 		}
 
