@@ -62,7 +62,7 @@ namespace Slash.Core
 			throw new System.NotImplementedException();
 		}
 
-		public override bool IsValidMove(SxGrid grid, SxToken token, out object data, bool throwError = false)
+		public override bool IsValidMove(SxGrid grid, out object data, bool throwError = false)
 		{
 			bool _RuleError(string message)
 			{
@@ -74,15 +74,9 @@ namespace Slash.Core
 			}
 
 			data = null;
-			if (grid == null || token == null)
+			if (grid == null)
 			{
 				return _RuleError("Invalid grid or token provided.");
-			}
-
-			// Check if the token is valid
-			if (Board.Turn != token.GetTurn())
-			{
-				return _RuleError($"Invalid turn. Expected {Board.Turn}, but attempt to place {token.GetTurn()}.");
 			}
 
 			if (grid.HasToken())
@@ -95,7 +89,7 @@ namespace Slash.Core
 			// 2) the move must be adjacent to an existing token of the different color
 			// 3) at least flip one token of the opposite color
 			var anchor = grid.coord;
-			var tokenTurn = token.GetTurn();
+			var turn = Board.Turn;
 			var flipList = new List<SxGrid>(8); // Initialize the flip list
 			var sb = new System.Text.StringBuilder();
 			sb.AppendLine($"Anchor {grid.ReadableId}:{anchor}");
@@ -115,7 +109,7 @@ namespace Slash.Core
 				}
 
 				// ignore same color tokens
-				if (g.token.GetTurn() == tokenTurn)
+				if (g.token.GetTurn() == turn)
 				{
 					sb.AppendLine(" same team, ignore.");
 					continue;
@@ -124,7 +118,7 @@ namespace Slash.Core
 				try
 				{
 					// try flip to the end, based on vector direction.
-					if (!CanFlip(g, token, direction, out var flipRows))
+					if (!CanFlip(g, turn, direction, out var flipRows))
 					{
 						sb.AppendLine(" cannot flipped.");
 						continue; // ignore grids that cannot be flip
@@ -151,7 +145,7 @@ namespace Slash.Core
 			return flipList.Count > 0;
 		}
 
-		public override void ExecuteMove(SxGrid grid, SxToken token, object data)
+		public override void ExecuteMove(SxGrid grid, object data)
 		{
 			if (data == null || !(data is List<SxGrid> flipList))
 			{
@@ -169,6 +163,7 @@ namespace Slash.Core
 				throw new System.Exception($"Grid {grid.ReadableId} already has a token. Cannot place a new token here.");
 			}
 
+			var token = Board.Turn == eTurn.White ? SxToken.CreateWhite() : SxToken.CreateBlack();
 			if (!TryPlaceToken(grid, token)) // Place the token on the grid
 			{
 				throw new System.Exception($"Failed to place token({token.GetTurn()}) on grid {grid.ReadableId}.");
@@ -196,11 +191,11 @@ namespace Slash.Core
 			SxLog.Info($"Result, Place {grid.ReadableId} with token {token.GetTurn()}.\n{sb.ToString()}");
 		}
 
-		private bool CanFlip(SxGrid anchor, SxToken token, SxCoord dir, out List<SxGrid> flipList)
+		private bool CanFlip(SxGrid anchor, eTurn turn, SxCoord dir, out List<SxGrid> flipList)
 		{
 			flipList = new List<SxGrid>(8); // Initialize if not provided
 
-			if (anchor == null || token == null || dir == null)
+			if (anchor == null || dir == null)
 			{
 				throw new System.Exception("Invalid anchor, token, or direction provided.");
 			}
@@ -211,7 +206,6 @@ namespace Slash.Core
 			//	return false;
 			//}
 
-			var tokenTurn = token.GetTurn();
 			var current = anchor.coord;
 			// Check if the first grid in the direction has a token
 			{
@@ -227,9 +221,9 @@ namespace Slash.Core
 					return false;
 				}
 
-				if (firstGrid.token.GetTurn() == tokenTurn)
+				if (firstGrid.token.GetTurn() == turn)
 				{
-					SxLog.Warning($"Grid {current.ReadableId} has a token of the same color as the current token {tokenTurn}. Cannot flip.");
+					SxLog.Warning($"Grid {current.ReadableId} has a token of the same color as the current token {turn}. Cannot flip.");
 					return false;
 				}
 
@@ -240,7 +234,7 @@ namespace Slash.Core
 			// Move in the direction until we find a token of the same color or reach the end of the board
 			while (Board.TryGetGrid(current, out var grid) && grid.HasToken())
 			{
-				var isOpponent = grid.token.GetTurn() != tokenTurn;
+				var isOpponent = grid.token.GetTurn() != turn;
 				if (!isOpponent)
 				{
 					// We found a token of the same color, can flip

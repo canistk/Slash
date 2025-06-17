@@ -44,7 +44,7 @@ namespace Slash.Core
 			throw new System.NotImplementedException();
 		}
 
-		public override bool IsValidMove(SxGrid grid, SxToken token, out object data, bool throwError = false)
+		public override bool IsValidMove(SxGrid grid, out object data, bool throwError = false)
 		{
 			bool _RuleError(string message)
 			{
@@ -56,15 +56,9 @@ namespace Slash.Core
 			}
 
 			data = null;
-			if (grid == null || token == null)
+			if (grid == null)
 			{
 				return _RuleError("Invalid grid or token provided.");
-			}
-
-			// Check if the token is valid
-			if (Board.Turn != token.GetTurn())
-			{
-				return _RuleError($"Invalid turn. Expected {Board.Turn}, but attempt to place {token.GetTurn()}.");
 			}
 
 			if (grid.HasToken())
@@ -96,7 +90,7 @@ namespace Slash.Core
 			};
 			var headToken = new SxCoord[4] { anchor, anchor, anchor, anchor };
 			var tokenCnts = new int[4]; // To count tokens in each direction
-			var tokenTurn = token.GetTurn();
+			var tokenTurn = Board.Turn;
 			// Check direction, for the farthest grid,
 			// which had same token color, cache it into headToken.
 			bool _IsValid(SxGrid _grid)
@@ -178,9 +172,9 @@ namespace Slash.Core
 			public List<SxGrid> eatGrids;
 		}
 
-		public override void ExecuteMove(SxGrid grid, SxToken token, object data)
+		public override void ExecuteMove(SxGrid grid, object data)
 		{
-			if (grid == null || token == null)
+			if (grid == null)
 			{
 				throw new System.Exception("Invalid grid or token provided for execution.");
 			}
@@ -190,6 +184,7 @@ namespace Slash.Core
 				throw new System.Exception("Data does not match the grid provided for execution.");
 			}
 
+			var token = Board.Turn == eTurn.White ? SxToken.CreateWhite() : SxToken.CreateBlack();
 			// Assumeing the grid already has the target token placed.
 			if (grid.HasToken())
 			{

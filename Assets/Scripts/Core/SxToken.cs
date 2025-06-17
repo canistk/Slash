@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 namespace Slash.Core
 {
-	[System.Serializable]
 	public class SxToken : System.IDisposable, IEquatable<SxToken>
 	{
 		public bool Equals(SxToken other)

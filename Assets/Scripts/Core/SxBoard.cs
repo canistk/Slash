@@ -303,22 +303,15 @@ namespace Slash.Core
                 throw new System.InvalidOperationException($"No logic handler found for rule: {Rule}");
             }
 
-            var token = m_Turn switch
-            {
-                eTurn.White => SxToken.CreateWhite(),
-                eTurn.Black => SxToken.CreateBlack(),
-                _ => throw new System.InvalidOperationException($"Invalid turn: {m_Turn}")
-            };
-
             m_State = eGameState.ValidatingMove;
             try
             {
-				if (!logic.IsValidMove(grid, token, out var data, throwError: true))
+				if (!logic.IsValidMove(grid, out var data, throwError: true))
                 {
                     throw new SxRuleException($"{logic.GetType()}, Invalid move, reset state and return");
                 }
 
-				logic.ExecuteMove(grid, token, data);
+				logic.ExecuteMove(grid, data);
 			}
             catch (SxRuleException ex)
             {

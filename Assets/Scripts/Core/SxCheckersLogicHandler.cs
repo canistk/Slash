@@ -100,7 +100,7 @@ namespace Slash.Core
 			}
 		}
 
-		public override bool IsValidMove(SxGrid grid, SxToken token, out object data, bool throwError = false)
+		public override bool IsValidMove(SxGrid grid, out object data, bool throwError = false)
 		{
 			// Check if the grid and token are valid
 			bool _RuleError(string message)
@@ -114,7 +114,7 @@ namespace Slash.Core
 
 			data = null;
 			// in checkers, we can only move existing tokens, not place new ones
-			token = null;
+			var token = default(SxToken);
 			if (!m_Picked.Key)
 			{
 				if (grid.HasToken())
@@ -249,7 +249,7 @@ namespace Slash.Core
 			}
 		}
 
-		public override void ExecuteMove(SxGrid grid, SxToken _, object data)
+		public override void ExecuteMove(SxGrid grid, object data)
 		{
 			if (data is not NormalMoveInfo normalMoveInfo)
 			{
@@ -266,14 +266,15 @@ namespace Slash.Core
 					return;
 				}
 
+				jumpMoveInfo.token.Link(jumpMoveInfo.to);
 				jumpMoveInfo.eatGrid.token.Dispose();
 				Board.AddScore(jumpMoveInfo.token.GetTurn(), 1);
 				SxLog.Info($"Move {jumpMoveInfo.token}, from {jumpMoveInfo.from.ReadableId} to {jumpMoveInfo.to.ReadableId}, eat = {jumpMoveInfo.eatGrid.ReadableId}");
 			}
 			else
 			{
-				SxLog.Info($"Move {normalMoveInfo.token}, from {normalMoveInfo.from.ReadableId} to {normalMoveInfo.to.ReadableId}");
 				normalMoveInfo.token.Link(normalMoveInfo.to);
+				SxLog.Info($"Move {normalMoveInfo.token}, from {normalMoveInfo.from.ReadableId} to {normalMoveInfo.to.ReadableId}");
 			}
 		}
 
