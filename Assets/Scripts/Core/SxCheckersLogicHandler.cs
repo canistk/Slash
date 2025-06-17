@@ -49,14 +49,9 @@ namespace Slash.Core
 			}
 		}
 
-		protected override void OnChangeMode(SxBoard board)
+		protected override void OnChangeMode(eGameRule prev, SxBoard board)
 		{
-			if (board == null)
-			{
-				SxLog.Error("Board cannot be null.");
-				return;
-			}
-			throw new System.NotImplementedException();
+			
 		}
 
 		public override void SolveConflict()

@@ -9,13 +9,17 @@ namespace Slash.Core
 		public SxLogicHandler(SxBoard board)
 		{
 			this.Board = board;
-			OnInitBoard(board);
 		}
         
+		public void Init()
+		{
+			OnInitBoard(Board);
+		}
+
 		protected abstract void OnInitBoard(SxBoard board);
 
 
-        public void ChangeMode(SxBoard board)
+        public void ChangeMode(eGameRule prev, SxBoard board)
         {
             if (board == null)
             {
@@ -23,9 +27,9 @@ namespace Slash.Core
                 return;
             }
             this.Board = board;
-            OnChangeMode(board);
+            OnChangeMode(prev, board);
 		}
-		protected abstract void OnChangeMode(SxBoard board);
+		protected abstract void OnChangeMode(eGameRule prev, SxBoard board);
 
 		public abstract void SolveConflict();
 
@@ -111,8 +115,4 @@ namespace Slash.Core
 		}
 		#endregion Utilities
 	}
-
- //   public class SxCheckersLogicHandler : SxLogicHandler
- //   {
-	//}
 }

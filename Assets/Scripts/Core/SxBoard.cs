@@ -216,11 +216,12 @@ namespace Slash.Core
             m_State = eGameState.InitBoard;
             m_Turn = turn;
             Rule = rule;
-            //if (!TryChangeMode(rule))
-            //{
-            //    SxLog.Error($"Failed to get logic handler for rule: {rule}");
-            //}
-			// m_State = eGameState.SolveConflict;
+            if (!TryGetLogicHandler(out var logic))
+            {
+				SxLog.Error($"Failed to get logic handler for rule: {rule}");
+                return;
+			}
+            logic.Init();
 			m_State = eGameState.WaitingForInput;
 		}
 
@@ -260,11 +261,25 @@ namespace Slash.Core
                 SxLog.Error($"Cannot change game rule from {Rule} to {rule}. Game is currently validating a move.");
                 return false;
             }
+            if (m_State != eGameState.WaitingForInput)
+            {
+                SxLog.Error($"Can only change mode during {eGameState.WaitingForInput}");
+                return false;
+            }
 
-            this.Rule = rule;
+            if (this.Rule == eGameRule.None)
+            {
+                /// <see cref="Init(eGameRule, eTurn)"/>
+                SxLog.Error($"Use Init() instead.");
+                return false;
+            }
+
+            SxLog.Info($"Change rule from {Rule} to {rule}");
+            var previous = this.Rule;
+            this.Rule = rule; // change rule
             if (TryGetLogicHandler(out var logic))
             {
-                logic.ChangeMode(this);
+				logic.ChangeMode(previous, this);
                 logic.SolveConflict();
             }
             else

@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Slash.Core
@@ -22,9 +20,8 @@ namespace Slash.Core
 			// Initialize the board with an empty state for Gobang
 		}
 
-		protected override void OnChangeMode(SxBoard board)
+		protected override void OnChangeMode(eGameRule prev, SxBoard board)
 		{
-			throw new System.NotImplementedException();
 		}
 
 		public override void SolveConflict()
