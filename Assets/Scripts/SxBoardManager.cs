@@ -150,22 +150,24 @@ namespace Slash
 			uiGrid.Init(grid);
 		}
 
-		Dictionary<SxToken, UIToken> m_TokenMap = new Dictionary<SxToken, UIToken>();
+		Dictionary<System.Guid, UIToken> m_TokenMap = new Dictionary<System.Guid, UIToken>();
 		private void OnSpawnToken(SxGrid grid, SxToken token)
 		{
-			if (m_TokenMap.ContainsKey(token))
+			if (token == null)
 				return;
-			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+			if (!m_TokenMap.TryGetValue(token.Id, out var uiToken))
 			{
 				uiToken = m_TokenPool.Get();
 				uiToken.Init(token);
-				m_TokenMap.Add(token, uiToken);
+				m_TokenMap.Add(token.Id, uiToken);
 			}
 		}
 
 		private void OnDespawnToken(SxGrid grid, SxToken token)
 		{
-			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+			if (token == null)
+				return;
+			if (!m_TokenMap.TryGetValue(token.Id, out var uiToken))
 			{
 				uiToken = token.UI as UIToken;
 				if (uiToken == null)
@@ -181,13 +183,11 @@ namespace Slash
 					SxLog.Error($"Token: {token}");
 				else
 					SxLog.Error("Token is null. Cannot release token UI.");
-				if (m_TokenMap.ContainsKey(token))
-					m_TokenMap.Remove(token);
-				else
+				if (!m_TokenMap.Remove(token.Id))
 					SxLog.Error("Token not found in the map. Cannot remove it from the map.");
 				return;
 			}
-			m_TokenMap.Remove(token);
+			m_TokenMap.Remove(token.Id);
 			m_TokenPool.Release(uiToken);
 		}
 
@@ -198,7 +198,7 @@ namespace Slash
 				SxLog.Error("Token is null. Cannot update token UI.");
 				return;
 			}
-			if (!m_TokenMap.TryGetValue(token, out var uiToken))
+			if (!m_TokenMap.TryGetValue(token.Id, out var uiToken))
 			{
 				// common case: token is not spawned yet, first link called from grid/token cause loop
 				return;
