@@ -40,9 +40,9 @@ namespace Slash.Core
 			switch (turn)
 			{
 				case eTurn.Black:
-					return new SxCoord(0, 1); // Black moves down-left or down-right
+					return new SxCoord(1, 0); // Black moves down-left or down-right
 				case eTurn.White:
-					return new SxCoord(0, -1); // White moves up-left or up-right
+					return new SxCoord(-1, 0); // White moves up-left or up-right
 				default:
 					SxLog.Error($"Invalid turn: {turn}");
 					return default;
@@ -182,10 +182,10 @@ namespace Slash.Core
 			}
 			// else, the grid is empty, and we can check the move cases
 			var dir = GetValidDirection(Board.Turn);
-			var dirRef = dir.y > 0;
+			var dirRef = dir.x > 0;
 			var v = grid.coord - token.GetGrid().coord;
 			var absMatched = System.Math.Abs(v.x) == System.Math.Abs(v.y);
-			var moveFwd = v.y > 0;
+			var moveFwd = v.x > 0;
 
 			var from = token.GetGrid();
 			var to = grid;
@@ -249,7 +249,7 @@ namespace Slash.Core
 			}
 		}
 
-		public override void ExecuteMove(SxGrid grid, SxToken token, object data)
+		public override void ExecuteMove(SxGrid grid, SxToken _, object data)
 		{
 			if (data is not NormalMoveInfo normalMoveInfo)
 			{
@@ -267,13 +267,13 @@ namespace Slash.Core
 				}
 
 				jumpMoveInfo.eatGrid.token.Dispose();
-				Board.AddScore(token.GetTurn(), 1);
+				Board.AddScore(jumpMoveInfo.token.GetTurn(), 1);
 				SxLog.Info($"Move {jumpMoveInfo.token}, from {jumpMoveInfo.from.ReadableId} to {jumpMoveInfo.to.ReadableId}, eat = {jumpMoveInfo.eatGrid.ReadableId}");
 			}
 			else
 			{
 				SxLog.Info($"Move {normalMoveInfo.token}, from {normalMoveInfo.from.ReadableId} to {normalMoveInfo.to.ReadableId}");
-				token.Link(normalMoveInfo.to);
+				normalMoveInfo.token.Link(normalMoveInfo.to);
 			}
 		}
 

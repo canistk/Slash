@@ -145,13 +145,13 @@ namespace Slash.Core
 		internal void Link(SxGrid grid)
 		{
 			var before = m_Grid;
+			this.m_Grid = grid;
 			if (before != null && ReferenceEquals(before.token, this))
 			{
 				before.Link(null); // remove link from previous grid
 				EVENT_Unlinked?.Invoke(before, this);
 			}
 			
-			this.m_Grid = grid;
 
 			if (grid != null)
 			{
