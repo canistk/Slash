@@ -130,8 +130,11 @@ namespace Slash.Core
 			for (int i = 0; i < headToken.Length; ++i)
 			{
 				var cnt = tokenCnts[i];
-				if (cnt < 5)
+				if (cnt != 5)
+				{
+					// GD note : more then 5 will not be eaten. (no score)
 					continue;
+				}
 				// Assume headToken[i] is Left most grid in the direction (d2h[i]),
 				// already heading to the right most grid (d2t[i]).
 				for (int k = 0; k < cnt; ++k)
