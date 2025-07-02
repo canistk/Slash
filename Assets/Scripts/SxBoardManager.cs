@@ -41,6 +41,11 @@ namespace Slash
 		[SerializeField] Vector3 m_GridOffset = new Vector3(0f, -0.5f, 0f);
 		[SerializeField] GameObject m_TokenPrefab = null;
 		ObjectPool<UIToken> m_TokenPool;
+
+		[Space]
+		[Header("Setting")]
+		[SerializeField] eGameRule m_StartupRule = eGameRule.Checkers;
+
 		private void Awake()
 		{
 			if (m_Instance != null)
@@ -89,7 +94,7 @@ namespace Slash
 		[ContextMenu("Init by Setting")]
 		public void InitBySetting()
 		{
-			Init(m_Width, m_Height, eGameRule.Checkers);
+			Init(m_Width, m_Height, m_StartupRule);
 		}
 
 		public void Init(int width, int height, eGameRule rule)
